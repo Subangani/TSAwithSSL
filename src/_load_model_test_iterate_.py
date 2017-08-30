@@ -16,6 +16,12 @@ import csv
 warnings.filterwarnings('ignore')
 
 
+def get_file_prefix():
+    return  str(globals.LABEL_LIMIT) + "_" + str(globals.FEATURE_SET_CODE) + "_" + \
+                      str(globals.TEST_LIMIT) + "_" + str(globals.INCREMENT_LIMIT) + "_" + \
+                      str(globals.NO_OF_ITERATION) + "_" + str(globals.DEFAULT_CLASSIFIER) + "_"
+
+
 def load_initial_dictionaries(type):
     """
     This used to classify initial dataset as positive,negative and neutral
@@ -410,3 +416,29 @@ def load_iteration_dict(is_self_training):
     ds.NEG_DICT_SELF = temp_neg_dict
     ds.NEU_DICT_SELF = temp_neu_dict
     return
+
+
+def upgrade():
+    ds.POS_UNI_GRAM = ds.POS_UNI_GRAM_SELF
+    ds.NEG_UNI_GRAM = ds.NEG_UNI_GRAM_SELF
+    ds.NEU_UNI_GRAM = ds.NEU_UNI_GRAM_SELF
+    ds.POS_POST_UNI_GRAM = ds.POS_POST_UNI_GRAM_SELF
+    ds.NEG_POST_UNI_GRAM = ds.NEG_POST_UNI_GRAM_SELF
+    ds.NEU_POST_UNI_GRAM = ds.NEU_POST_UNI_GRAM_SELF
+    ds.POS_DICT.update(ds.POS_DICT_SELF.copy())
+    ds.NEG_DICT.update(ds.NEG_DICT_SELF.copy())
+    ds.NEU_DICT.update(ds.NEU_DICT_SELF.copy())
+    ds.VECTORS = ds.VECTORS_SELF
+    ds.LABELS = ds.LABELS_SELF
+    
+
+def downgrade():
+    for key in ds.POS_DICT_SELF.keys():
+        ds.UNLABELED_DICT.update(
+            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.POS_DICT_SELF.get(key)})
+    for key in ds.NEG_DICT_SELF.keys():
+        ds.UNLABELED_DICT.update(
+            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.NEG_DICT_SELF.get(key)})
+    for key in ds.NEU_DICT_SELF.keys():
+        ds.UNLABELED_DICT.update(
+            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.NEU_DICT_SELF.get(key)})
