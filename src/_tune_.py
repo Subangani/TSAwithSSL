@@ -14,7 +14,7 @@ from sklearn import svm
 import _config_constants_ as cons
 import sys
 
-TOTAL_TRAIN_DATA = 20000
+TOTAL_TRAIN_DATA = 20633
 
 POS_TRAIN_DATA = {}
 NEG_TRAIN_DATA = {}

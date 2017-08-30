@@ -4,14 +4,10 @@ import time
 import _generic_commons_ as commons
 import _config_globals_ as globals
 import _config_constants_ as cons
-import LMPT
+import _load_model_test_iterate_ as lmti
 
 
 def self_training():
-    """
-    Main Program
-    :return:
-    """
     directory = "../dataset/analysed/"
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -34,89 +30,55 @@ def self_training():
 
             time_list = [time.time()]
 
-            LMPT.load_initial_dictionaries(1)
-            LMPT.get_vectors_and_labels()
-            LMPT.generate_model(is_self_training=False)
-            LMPT.store_test(is_self_training=False)
+            lmti.load_initial_dictionaries(1)
+            lmti.get_vectors_and_labels()
+            lmti.generate_model(is_self_training=False)
+            lmti.store_test(is_self_training=False)
 
-            pos_len = len(LMPT.ds.POS_DICT)
-            neg_len = len(LMPT.ds.NEG_DICT)
-            neu_len = len(LMPT.ds.NEU_DICT)
-            test_len = len(LMPT.ds.TEST_DICT)
+            result = lmti.get_result(lmti.ds.TEST_DICT)
+            print result
+            csv_result.writerow(result)
 
-            print \
-                (
-                    pos_len, neg_len, neu_len, feature_set_code, test_len, 0
-                )\
-                , commons.get_score(LMPT.ds.TEST_DICT)
-
-            csv_result.writerow(
-                (
-                    pos_len, neg_len, neu_len, feature_set_code, test_len, 0
-                )
-                +
-                commons.get_score(LMPT.ds.TEST_DICT)
-            )
-
-            fscore_best = commons.get_score(LMPT.ds.TEST_DICT)[9]
-            successful_addition = 0
-            i = 1
-            while i < no_of_iteration:
-                if i == 1:
+            fscore_best = result[15]
+            while lmti.ds.CURRENT_ITERATION <= no_of_iteration:
+                if lmti.ds.CURRENT_ITERATION == 1:
                     is_self_training = False
                 else:
                     is_self_training = True
 
-                LMPT.load_iteration_dict(is_self_training)
-                LMPT.get_vectors_and_labels_self()
-                LMPT.generate_model(is_self_training=True)
-                LMPT.store_test(is_self_training=True)
+                lmti.load_iteration_dict(is_self_training)
+                lmti.get_vectors_and_labels_self()
+                lmti.generate_model(is_self_training=True)
+                lmti.store_test(is_self_training=True)
 
-                pos_len = pos_len + len(LMPT.ds.POS_DICT_SELF)
-                neg_len = neg_len + len(LMPT.ds.NEG_DICT_SELF)
-                neu_len = neu_len + len(LMPT.ds.NEU_DICT_SELF)
-                pos_len_self = pos_len
-                neg_len_self = neg_len
-                neu_len_self = neu_len
+                result = lmti.get_result(lmti.ds.TEST_DICT)
+                fscore_iter = result[15]
 
-                print \
-                    (
-                        pos_len_self, neg_len_self, neu_len_self, feature_set_code, test_len, i
-                    ) \
-                    , \
-                    commons.get_score(LMPT.ds.TEST_DICT)
-
-                csv_result.writerow(
-                    (
-                        pos_len_self, neg_len_self, neu_len_self, feature_set_code, test_len, i
-                    )
-                    +
-                    commons.get_score(LMPT.ds.TEST_DICT)
-                )
-
-                fscore_iter = commons.get_score(LMPT.ds.TEST_DICT)[9]
-
-                if fscore_best < fscore_iter:
-                    LMPT.ds.POS_UNI_GRAM = LMPT.ds.POS_UNI_GRAM_SELF
-                    LMPT.ds.NEG_UNI_GRAM = LMPT.ds.NEG_UNI_GRAM_SELF
-                    LMPT.ds.NEU_UNI_GRAM = LMPT.ds.NEU_UNI_GRAM_SELF
-                    LMPT.ds.POS_POST_UNI_GRAM = LMPT.ds.POS_POST_UNI_GRAM_SELF
-                    LMPT.ds.NEG_POST_UNI_GRAM = LMPT.ds.NEG_POST_UNI_GRAM_SELF
-                    LMPT.ds.NEU_POST_UNI_GRAM = LMPT.ds.NEU_POST_UNI_GRAM_SELF
-                    LMPT.ds.VECTORS = LMPT.ds.VECTORS_SELF
-                    LMPT.ds.LABELS = LMPT.ds.LABELS_SELF
+                if fscore_best <= fscore_iter:
+                    lmti.ds.POS_UNI_GRAM = lmti.ds.POS_UNI_GRAM_SELF
+                    lmti.ds.NEG_UNI_GRAM = lmti.ds.NEG_UNI_GRAM_SELF
+                    lmti.ds.NEU_UNI_GRAM = lmti.ds.NEU_UNI_GRAM_SELF
+                    lmti.ds.POS_POST_UNI_GRAM = lmti.ds.POS_POST_UNI_GRAM_SELF
+                    lmti.ds.NEG_POST_UNI_GRAM = lmti.ds.NEG_POST_UNI_GRAM_SELF
+                    lmti.ds.NEU_POST_UNI_GRAM = lmti.ds.NEU_POST_UNI_GRAM_SELF
+                    lmti.ds.POS_DICT.update(lmti.ds.POS_DICT_SELF.copy())
+                    lmti.ds.NEG_DICT.update(lmti.ds.NEG_DICT_SELF.copy())
+                    lmti.ds.NEU_DICT.update(lmti.ds.NEU_DICT_SELF.copy())
+                    lmti.ds.VECTORS = lmti.ds.VECTORS_SELF
+                    lmti.ds.LABELS = lmti.ds.LABELS_SELF
                     fscore_best = fscore_iter
-                    successful_addition += 1
+                    result = lmti.get_result(lmti.ds.TEST_DICT)
+                    print result
+                    csv_result.writerow(result)
                 else:
-                    for key in LMPT.ds.POS_DICT_SELF.keys():
-                        LMPT.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (i + 1) + int(key)): LMPT.ds.POS_DICT_SELF.get(key)})
-                    for key in LMPT.ds.NEG_DICT_SELF.keys():
-                        LMPT.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (i + 1) + int(key)): LMPT.ds.NEG_DICT_SELF.get(key)})
-                    for key in LMPT.ds.NEU_DICT_SELF.keys():
-                        LMPT.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (i + 1) + int(key)): LMPT.ds.NEU_DICT_SELF.get(key)})
-                i = i + 1
+                    for key in lmti.ds.POS_DICT_SELF.keys():
+                        lmti.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (lmti.ds.CURRENT_ITERATION + 1) + int(key)): lmti.ds.POS_DICT_SELF.get(key)})
+                    for key in lmti.ds.NEG_DICT_SELF.keys():
+                        lmti.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (lmti.ds.CURRENT_ITERATION + 1) + int(key)): lmti.ds.NEG_DICT_SELF.get(key)})
+                    for key in lmti.ds.NEU_DICT_SELF.keys():
+                        lmti.ds.UNLABELED_DICT.update({str(cons.DATA_SET_SIZE * (lmti.ds.CURRENT_ITERATION + 1) + int(key)): lmti.ds.NEU_DICT_SELF.get(key)})
+                lmti.ds.CURRENT_ITERATION += 1
             time_list.append(time.time())
-            print successful_addition
             print commons.temp_difference_cal(time_list)
     else:
         print "Error in access directory ", directory

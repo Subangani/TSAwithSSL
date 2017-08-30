@@ -19,6 +19,8 @@ MODEL = None
 SCALAR = None
 NORMALIZER = None
 
+CURRENT_ITERATION = 1
+
 # These are for temporary storing things for SELF TRAINING
 # 1. These are for storing LABEL train data in every iteration
 # no continuous accumulation will be happen at here.

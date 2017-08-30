@@ -300,6 +300,62 @@ def store_test(is_self_training):
     return
 
 
+def get_result(test_dict):
+    """
+    :param test_dict:
+    :return:
+    """
+    pos_len = len(ds.POS_DICT)
+    neg_len = len(ds.NEG_DICT)
+    neu_len = len(ds.NEU_DICT)
+    test_len = len(ds.TEST_DICT)
+    feature_set_code = globals.FEATURE_SET_CODE
+    current_iteration = ds.CURRENT_ITERATION - 1
+    TP = TN = TNeu = FP_N = FP_Neu = FN_P = FN_Neu = FNeu_P = FNeu_N = 0
+    if len(test_dict) > 0:
+        dic = {'positive': 2.0, 'negative': -2.0, 'neutral': 0.0}
+        for key in test_dict.keys():
+            line = test_dict.get(key)
+            new = str(line[2])
+            old = str(dic.get(line[0]))
+            if old == new:
+                if new == "2.0":
+                    TP += 1
+                elif new == "-2.0":
+                    TN += 1
+                elif new == "0.0":
+                    TNeu += 1
+            else:
+                if new == "2.0" and old == "-2.0":
+                    FP_N += 1
+                elif new == "2.0" and old == "0.0":
+                    FP_Neu += 1
+                elif new == "-2.0" and old == "2.0":
+                    FN_P += 1
+                elif new == "-2.0" and old == "0.0":
+                    FN_Neu += 1
+                elif new == "0.0" and old == "2.0":
+                    FNeu_P += 1
+                elif new == "0.0" and old == "-2.0":
+                    FNeu_N += 1
+    else:
+        print "No test data"
+    accuracy = commons.get_divided_value((TP + TN + TNeu),(TP + TN + TNeu + FP_N + FP_Neu + FN_P +FN_Neu + FNeu_P + FNeu_N))
+    pre_p = commons.get_divided_value(TP, (FP_N + FP_Neu + TP))
+    pre_n = commons.get_divided_value(TN, (FN_P + FN_Neu + TN))
+    pre_neu = commons.get_divided_value(TNeu, (FNeu_P + FNeu_N + TNeu))
+    re_p = commons.get_divided_value(TP, (FN_P + FNeu_P + TP))
+    re_n = commons.get_divided_value(TN, (FP_N + FNeu_N + TN))
+    re_neu = commons.get_divided_value(TNeu, (FNeu_P + FNeu_N + TNeu))
+    f_score_p = 2 * commons.get_divided_value((re_p * pre_p),(re_p + pre_p))
+    f_score_n = 2 * commons.get_divided_value((re_n * pre_n),(re_n + pre_n))
+    f_score = round((f_score_p + f_score_n)/2,4)
+
+    return pos_len,neg_len,neu_len,test_len,feature_set_code,current_iteration,\
+        accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
+        f_score_p, f_score_n,f_score
+
+
 def load_iteration_dict(is_self_training):
     """
     divide the unlabelled data to do self training
