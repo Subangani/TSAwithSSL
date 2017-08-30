@@ -1,11 +1,25 @@
-def load_words(filename):
+# This for loading dictionaries of NRC,BingLui,senti140 Lexicons
+def load_generic_dictionary(file_name):
+    lexicon_dict={}
+    f0=open(file_name,'r')
+    line = f0.readline()
+    while line:
+        row= line.split("\t")
+        line=f0.readline()
+        lexicon_dict.update({row[0]: row[1]})
+    return lexicon_dict
+
+
+# This is for loading dictionaries for Positive,Negative Lexicons
+def load_word_dictionary(filename):
     f = open(filename, 'r')
     line = f.readline()
     lines = line.split(",");
     return lines
 
 
-def load_afinn(filename):
+# This is for loading AFINN-96 and AFINN-111 dictionaries
+def load_afinn_dictionary(filename):
     f = open(filename, 'r')
     afinn = {}
     line = f.readline()
@@ -21,18 +35,8 @@ def load_afinn(filename):
     return afinn
 
 
-def create_dict(file_name):
-    lexicon_dict={}
-    f0=open(file_name,'r')
-    line = f0.readline()
-    while line:
-        row= line.split("\t")
-        line=f0.readline()
-        lexicon_dict.update({row[0]: row[1]})
-    return lexicon_dict
-
-
-def load_senti_word_net(filename):
+# This is for loading sentiwordnet dictionaries
+def load_senti_word_net_dictionary(filename):
     sentiWordnetDict={}
     tempDictionary={}
     f0=open(filename,'r')

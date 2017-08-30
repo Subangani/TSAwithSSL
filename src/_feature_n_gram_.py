@@ -82,7 +82,6 @@ def score(tweet, p, n, ne, ngram):
     return [pos, neg, neu]
 
 
-
 def get_count(gram, pol):
     """
     This will count the positive,negative, and neutral count based on relevant dictionary present

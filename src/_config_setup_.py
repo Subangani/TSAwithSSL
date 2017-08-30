@@ -13,7 +13,7 @@ FEATURE_SET_CODE = 15
 # FEATURE_SET is combination of set of features like lexicon, writing style and ngrams
 # (also emoticons) according I have defined a set of feature set code and get combinations
 # out of these code 15 performs better which in coporate all features.
-# To customize you can edit map_tweet(tweet,is_self_training) in classifier.py
+# To customize you can edit map_tweet(tweet,is_self_training) in LMPT.py
 
 
 DEFAULT_CLASSIFIER = cons.CLASSIFIER_SVM
@@ -22,7 +22,7 @@ if DEFAULT_CLASSIFIER == cons.CLASSIFIER_SVM:
     DEFAULT_KERNEL = cons.KERNEL_RBF
     DEFAULT_C_PARAMETER = 0.91
     DEFAULT_GAMMA_SVM = 0.03
-    DEFAULT_CLASS_WEIGHTS = {2.0: 1.47, 0.0:1, -2.0: 3.125}
+    DEFAULT_CLASS_WEIGHTS = {2.0: 1.47, 0.0: 1, -2.0: 3.125}
 elif DEFAULT_CLASSIFIER == cons.CLASSIFIER_XGBOOST:
     DEFAULT_LEARNING_RATE = 0.1
     DEFAULT_MAX_DEPTH = 3

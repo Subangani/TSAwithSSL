@@ -2,7 +2,7 @@ from __future__ import division
 import csv
 
 
-def create_emoticon_dictionary(filename):
+def load_emoticon_dictionary(filename):
     emo_scores = {'Positive': 0.5, 'Extremely-Positive': 1.0, 'Negative': -0.5, 'Extremely-Negative': -1.0,
                   'Neutral': 0.0}
     emo_score_list = {}
@@ -22,7 +22,7 @@ def create_emoticon_dictionary(filename):
     return emo_score_list
 
 
-def create_unicode_emoticon_dictionary(filename):
+def load_unicode_emoticon_dictionary(filename):
     emo_score_list = {}
     with open(filename, "r") as unlabeled_file:
         reader = csv.reader(unlabeled_file)

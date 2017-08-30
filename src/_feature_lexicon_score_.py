@@ -3,6 +3,19 @@ import _feature_lexicon_dict_load_ as dict_load
 import nltk
 
 
+def get_ngram_word(words,gram):
+    ngram_list = []
+    for i in range(len(words) + 1 - gram):
+        temp = ""
+        if not words[i:i + gram] is "":
+            if gram == 1:
+                temp = words[i]
+            elif gram == 2:
+                temp = words[i] + " " + words[i + 1]
+        ngram_list.append(temp)
+    return ngram_list
+
+
 def get_lexicon_score(tweet):
     score = 0
     for w in tweet.split():
@@ -44,6 +57,7 @@ def get_afinn_111_score(tweet):
     else:
         return 0.0
 
+
 def get_senti140_score(tweet):
     words = tweet.split()
     unigram_list = get_ngram_word(words,1)
@@ -72,19 +86,6 @@ def get_NRC_score(tweet):
                 elif dict_load.NRC_HASHTAG_DICT.get(word) == 'negative\n':
                     hash_score -= 1.0
     return uni_score,hash_score
-
-
-def get_ngram_word(words,gram):
-    ngram_list = []
-    for i in range(len(words) + 1 - gram):
-        temp = ""
-        if not words[i:i + gram] is "":
-            if gram == 1:
-                temp = words[i]
-            elif gram == 2:
-                temp = words[i] + " " + words[i + 1]
-        ngram_list.append(temp)
-    return ngram_list
 
 
 def get_senti_word_net_score(tweet):
