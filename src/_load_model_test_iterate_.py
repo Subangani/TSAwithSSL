@@ -311,12 +311,17 @@ def get_result(test_dict):
     :param test_dict:
     :return:
     """
-    pos_len = len(ds.POS_DICT)
-    neg_len = len(ds.NEG_DICT)
-    neu_len = len(ds.NEU_DICT)
-    test_len = len(ds.TEST_DICT)
-    feature_set_code = globals.FEATURE_SET_CODE
     current_iteration = ds.CURRENT_ITERATION - 1
+    ds.LEN_TEST = len(ds.TEST_DICT)
+    if current_iteration == 0:
+        ds.LEN_POS = len(ds.POS_DICT)
+        ds.LEN_NEG = len(ds.NEG_DICT)
+        ds.LEN_NEU = len(ds.NEU_DICT)
+    elif current_iteration > 0:
+        ds.LEN_POS += len(ds.POS_DICT_SELF)
+        ds.LEN_NEG += len(ds.NEG_DICT_SELF)
+        ds.LEN_NEU += len(ds.NEU_DICT_SELF)
+
     TP = TN = TNeu = FP_N = FP_Neu = FN_P = FN_Neu = FNeu_P = FNeu_N = 0
     if len(test_dict) > 0:
         dic = {'positive': 2.0, 'negative': -2.0, 'neutral': 0.0}
@@ -357,7 +362,7 @@ def get_result(test_dict):
     f_score_n = 2 * commons.get_divided_value((re_n * pre_n),(re_n + pre_n))
     f_score = round((f_score_p + f_score_n)/2,4)
 
-    return pos_len,neg_len,neu_len,test_len,feature_set_code,current_iteration,\
+    return ds.LEN_POS,ds.LEN_NEG,ds.LEN_NEU,ds.LEN_TEST,globals.FEATURE_SET_CODE,current_iteration,\
         accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
         f_score_p, f_score_n,f_score
 
@@ -416,6 +421,22 @@ def load_iteration_dict(is_self_training):
     ds.NEG_DICT_SELF = temp_neg_dict
     ds.NEU_DICT_SELF = temp_neu_dict
     return
+
+
+def initial_run():
+    load_initial_dictionaries(1)
+    get_vectors_and_labels()
+    generate_model(is_self_training=False)
+    store_test(is_self_training=False)
+    return get_result(ds.TEST_DICT)
+
+
+def self_training_run(is_self_training):
+    load_iteration_dict(is_self_training)
+    get_vectors_and_labels_self()
+    generate_model(is_self_training=True)
+    store_test(is_self_training=True)
+    return get_result(ds.TEST_DICT)
 
 
 def upgrade():
