@@ -14,11 +14,11 @@ def pos_tag_string(tweet):
     tagged_tweet = (nltk.pos_tag(tweet_words.replace("_NEG", "").split()))
     for i in range(len(tagged_tweet)):
         if tagged_tweet[i][1] in adjective_list:
-            tag_tweet += tagged_tweet[i][0] + "|" + "adj" +" "
+            tag_tweet += tagged_tweet[i][0] + "|" + "ADJ" + " "
         elif tagged_tweet[i][1] in verb_list:
-            tag_tweet += tagged_tweet[i][0] + "|" + "verb" +" "
+            tag_tweet += tagged_tweet[i][0] + "|" + "VER" + " "
         elif tagged_tweet[i][1] in adverb_list:
-            tag_tweet += tagged_tweet[i][0] + "|" + "adv" +" "
+            tag_tweet += tagged_tweet[i][0] + "|" + "ADV" + " "
         elif tagged_tweet[i][1] in noun_list:
-            tag_tweet += tagged_tweet[i][0] + "|" + "noun" +" "
+            tag_tweet += tagged_tweet[i][0] + "|" + "NOU" + " "
     return tag_tweet

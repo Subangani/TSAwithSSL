@@ -40,7 +40,9 @@ elif DEFAULT_CLASSIFIER == cons.CLASSIFIER_XGBOOST:
 
 # HEADER OF THE SAVING FILE
 
-CSV_HEADER = ["Iteration","Accuracy", "PrecisionPositive", "PrecisionNegative", "PrecisionNeutral",
-              "RecallPositive", "RecallNegative", "RecallNeutral", "fScorePositive",
-              "fScoreNegative", "fScoreAverage"]
+CSV_HEADER = ["PositiveTrainSet", "NegativeTrainSet", "NeutralTrainSet",
+              "FeatureSetCode", "TestSetLimit", "Iteration", "Accuracy",
+              "PrecisionPositive", "PrecisionNegative", "PrecisionNeutral",
+              "RecallPositive", "RecallNegative", "RecallNeutral",
+              "fScorePositive", "fScoreNegative", "fScoreAverage"]
 

@@ -39,6 +39,9 @@ def get_afinn_99_score(tweet):
         if w in dict_load.AFFIN_LOAD_96.keys():
             nbr += 1
             p += dict_load.AFFIN_LOAD_96[w]
+        if (w + "_NEG") in dict_load.AFFIN_LOAD_96.keys():
+            nbr += 1
+            p -= dict_load.AFFIN_LOAD_96[w]
     if nbr != 0:
         return p / nbr
     else:
@@ -52,6 +55,9 @@ def get_afinn_111_score(tweet):
         if w in dict_load.AFFIN_LOAD_111.keys():
             nbr += 1
             p += dict_load.AFFIN_LOAD_111[w]
+        if (w + "_NEG") in dict_load.AFFIN_LOAD_111.keys():
+            nbr += 1
+            p -= dict_load.AFFIN_LOAD_111[w]
     if nbr != 0:
         return p / nbr
     else:
@@ -64,7 +70,9 @@ def get_senti140_score(tweet):
     uni_score=0.0
     for word in unigram_list:
         if dict_load.SENTI_140_UNIGRAM_DICT.has_key(word):
-            uni_score+=float(dict_load.SENTI_140_UNIGRAM_DICT.get(word))
+            uni_score += float(dict_load.SENTI_140_UNIGRAM_DICT.get(word))
+        if dict_load.SENTI_140_UNIGRAM_DICT.has_key((word + "_NEG")):
+            uni_score -= float(dict_load.SENTI_140_UNIGRAM_DICT.get(word))
     return uni_score
 
 
@@ -76,6 +84,8 @@ def get_NRC_score(tweet):
     for word in unigram_list:
         if dict_load.NRC_UNIGRAM_DICT.has_key(word):
             uni_score += float(dict_load.NRC_UNIGRAM_DICT.get(word))
+        if dict_load.NRC_UNIGRAM_DICT.has_key((word + "_NEG")):
+            uni_score -= float(dict_load.NRC_UNIGRAM_DICT.get(word))
         if list(word)[0] == '#':
             ar=list(word)
             ar.remove("#")
@@ -119,8 +129,13 @@ def get_binliu_score(tweet):
     score=0.0
     for word in tweet.split():
         if dict_load.BING_LIU_DICT.has_key(word):
-            if dict_load.BING_LIU_DICT.get(word)=='positive\n':
+            if dict_load.BING_LIU_DICT.get(word) == 'positive\n':
                 score += 1
-            if dict_load.BING_LIU_DICT.get(word)=='negative\n':
+            if dict_load.BING_LIU_DICT.get(word) == 'negative\n':
                 score -= 1
+        if dict_load.BING_LIU_DICT.has_key((word + "_NEG")):
+            if dict_load.BING_LIU_DICT.get((word + "_NEG")) == 'positive\n':
+                score -= 1
+            if dict_load.BING_LIU_DICT.get((word + "_NEG")) == 'negative\n':
+                score += 1
     return score

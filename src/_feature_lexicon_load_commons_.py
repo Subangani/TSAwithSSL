@@ -7,6 +7,7 @@ def load_generic_dictionary(file_name):
         row= line.split("\t")
         line=f0.readline()
         lexicon_dict.update({row[0]: row[1]})
+    f0.close()
     return lexicon_dict
 
 
@@ -15,6 +16,7 @@ def load_word_dictionary(filename):
     f = open(filename, 'r')
     line = f.readline()
     lines = line.split(",");
+    f.close()
     return lines
 
 
@@ -32,6 +34,7 @@ def load_afinn_dictionary(filename):
             line = f.readline()
         except ValueError:
             break
+    f.close()
     return afinn
 
 
@@ -66,4 +69,5 @@ def load_senti_word_net_dictionary(filename):
             sum += 1.0 /float(k2)
         score /= sum
         sentiWordnetDict[k1]=score
+    f0.close()
     return sentiWordnetDict

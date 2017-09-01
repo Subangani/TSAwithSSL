@@ -446,9 +446,6 @@ def upgrade():
     ds.POS_POST_UNI_GRAM = ds.POS_POST_UNI_GRAM_SELF
     ds.NEG_POST_UNI_GRAM = ds.NEG_POST_UNI_GRAM_SELF
     ds.NEU_POST_UNI_GRAM = ds.NEU_POST_UNI_GRAM_SELF
-    ds.POS_DICT.update(ds.POS_DICT_SELF.copy())
-    ds.NEG_DICT.update(ds.NEG_DICT_SELF.copy())
-    ds.NEU_DICT.update(ds.NEU_DICT_SELF.copy())
     ds.VECTORS = ds.VECTORS_SELF
     ds.LABELS = ds.LABELS_SELF
     
