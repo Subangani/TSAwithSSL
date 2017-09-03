@@ -276,15 +276,15 @@ def predict_probability_compare(nl,na):
     max_proba = max(na)
     if max > 0.5:
         if na[0] == max_proba and nl == -2.0:
-            return True
+            return max_proba, True
         elif na[1] == max_proba and nl == 0.0:
-            return True
+            return max_proba, True
         elif na[2] == max_proba and nl == 2.0:
-            return True
+            return max_proba, True
         else:
-            return False
+            return max_proba, True
     else:
-        return False
+        return max_proba, True
 
 
 def store_test(is_self_training):
@@ -381,38 +381,44 @@ def load_iteration_dict(is_self_training):
         temp_pos_dict = {}
         temp_neg_dict = {}
         temp_neu_dict = {}
-        pos_finished = False
-        neg_finished = False
-        neu_finished = False
+        pos_list = []
+        neg_list = []
+        neu_list = []
+
         for key in ds.UNLABELED_DICT.keys():
             tweet = ds.UNLABELED_DICT.get(key)
             nl = predict(tweet,is_self_training)
             na = predict_probability(tweet,is_self_training)
-            is_success = predict_probability_compare(nl,na)
-            if is_success :
-                if nl == 2.0 and pos_count < globals.POS_RATIO * increment_limit:
-                    temp_pos_dict[str(pos_count)] = tweet
-                    pos_count = pos_count + 1
-                    del ds.UNLABELED_DICT[key]
-                elif nl == 2.0 and pos_count >= globals.POS_RATIO * increment_limit:
-                    pos_finished = True
+            max_proba, is_success = predict_probability_compare(nl,na)
+            # NEED TO IMPLEMENT DISTANCE MEASURE AND FROM THAT ONLY
+            # WE NEED TO CALCULATE THE MEASURES..
+            if is_success:
+                list = [tweet,nl,max_proba,key]
+                if nl == 2.0:
+                    pos_list.append(list)
+                    pos_count += 1
+                if nl == -2.0:
+                    neg_list.append(list)
+                    neg_count += 1
+                if nl == 0.0 :
+                    neu_list.append(list)
+                    neu_count += 1
 
-                if nl == -2.0 and neg_count < globals.NEG_RATIO * increment_limit:
-                    temp_neg_dict[str(neg_count)] = tweet
-                    neg_count = neg_count + 1
-                    del ds.UNLABELED_DICT[key]
-                elif nl == -2.0 and neg_count >= globals.NEG_RATIO * increment_limit:
-                    neg_finished = True
+        pos_list_final = sorted(pos_list, key=lambda pos_list: pos_list[2], reverse=True)
+        neg_list_final = sorted(neg_list, key=lambda neg_list: neg_list[2], reverse=True)
+        neu_list_final = sorted(neu_list, key=lambda neu_list: neu_list[2], reverse=True)
 
-                if nl == 0 and neu_count < globals.NEU_RATIO * increment_limit:
-                    temp_neu_dict[str(neu_count)] = tweet
-                    neu_count = neu_count + 1
-                    del ds.UNLABELED_DICT[key]
-                elif nl == 0 and neu_count >= globals.NEU_RATIO * increment_limit:
-                    neu_finished = True
+        for i in range(0, int(globals.POS_RATIO * increment_limit), 1):
+            temp_pos_dict[str(i)] = pos_list_final[i][0]
+            del ds.UNLABELED_DICT[pos_list_final[i][3]]
 
-            if pos_finished and neg_finished and neu_finished :
-                break
+        for i in range(0, int(globals.NEG_RATIO * increment_limit), 1):
+            temp_neg_dict[str(i)] = neg_list_final[i][0]
+            del ds.UNLABELED_DICT[neg_list_final[i][3]]
+
+        for i in range(0, int(globals.NEU_RATIO * increment_limit), 1):
+            temp_neu_dict[str(i)] = neu_list_final[i][0]
+            del ds.UNLABELED_DICT[neu_list_final[i][3]]
     else:
         temp_pos_dict = {}
         temp_neg_dict = {}

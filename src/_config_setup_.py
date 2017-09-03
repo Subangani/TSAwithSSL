@@ -4,10 +4,10 @@ import _config_constants_ as cons
 # Parameters related to training model (some constants are important to
 # look nice)
 
-LABEL_RATIO = 0.05
+LABEL_RATIO = 0.2
 TEST_LIMIT = 13000
 INCREMENT_LIMIT = 20
-NO_OF_ITERATION = 40
+NO_OF_ITERATION = 20
 
 FEATURE_SET_CODE = 15
 # FEATURE_SET is combination of set of features like lexicon, writing style and ngrams
