@@ -27,10 +27,11 @@ def dict(words, gram):
     return tempdict
 
 
-def ngram(file_dict, gram):
+def ngram(file_dict, gram, is_self_training):
     """
     this will return n-gram set for uni-gram,bi-gram and tri-gram, with frequency calculated
     for normal text and POS-tagged.
+    :param is_self_training: 
     :param file_dict:
     :param gram:
     :return: frequency dictionaries
@@ -40,7 +41,10 @@ def ngram(file_dict, gram):
     keys = file_dict.keys()
     for line_key in keys:
         try:
-            line = file_dict.get(line_key)
+            if is_self_training :
+                line,weight = file_dict.get(line_key)
+            else:
+                line = file_dict.get(line_key)
             words = line.split()
             word_dict = dict(words, gram)
             word_freq_dict, is_success = commons.dict_update(word_freq_dict, word_dict)

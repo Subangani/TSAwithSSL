@@ -39,8 +39,8 @@ def load_initial_dictionaries(type):
             for line in reader:
                 count = count + 1
                 tweet = line[5]
-                if count < (10000):
-                    unlabel_dict.update({str(count): tweet})
+                if count < 10000:
+                    unlabel_dict.update({str(count): [tweet,1]})
                 else:
                     break
     else:
@@ -64,7 +64,7 @@ def load_initial_dictionaries(type):
                     if not type:
                         break
                     else:
-                        unlabel_dict.update({str(unlabel_count): str(line[2])})
+                        unlabel_dict.update({str(unlabel_count): [str(line[2]),1]})
                         unlabel_count +=1
         ds.POS_DICT = pos_dict
         ds.NEG_DICT = neg_dict
@@ -138,8 +138,6 @@ def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
     """
     :param process_dict:
     :param label:
-    :param random_list:
-    :param is_randomized:
     :param is_self_training:
     :return:
     """
@@ -152,7 +150,10 @@ def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
             labels = []
             k_pol = 0
             for key in keys:
-                line = process_dict.get(key)
+                if is_self_training :
+                    line, weight = process_dict.get(key)
+                else :
+                    line = process_dict.get(key)
                 k_pol += 1
                 z = map_tweet(line,is_self_training)
                 vectors.append(z)
@@ -169,9 +170,9 @@ def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
 
 
 def get_vectors_and_labels():
-    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1)
-    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1)
-    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1)
+    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1,is_self_training=False)
+    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1,is_self_training=False)
+    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1,is_self_training=False)
     pos_vec, pos_lab, kpos = load_matrix_sub(process_dict=ds.POS_DICT,label=2.0, is_self_training=False)
     neg_vec, neg_lab, kneg = load_matrix_sub(process_dict=ds.NEG_DICT,label=-2.0, is_self_training=False)
     neu_vec, neu_lab, kneu = load_matrix_sub(process_dict=ds.NEU_DICT,label=0.0, is_self_training=False)
@@ -186,9 +187,9 @@ def get_vectors_and_labels_self():
     obtain the vectors and labels for total self training and storing it at main store
     :return:
     """
-    pos_t, pos_post_t = ngram.ngram(ds.POS_DICT_SELF, 1)
-    neg_t, neg_post_t = ngram.ngram(ds.NEG_DICT_SELF, 1)
-    neu_t, neu_post_t = ngram.ngram(ds.NEU_DICT_SELF, 1)
+    pos_t, pos_post_t = ngram.ngram(ds.POS_DICT_SELF, 1, is_self_training=True)
+    neg_t, neg_post_t = ngram.ngram(ds.NEG_DICT_SELF, 1, is_self_training=True)
+    neu_t, neu_post_t = ngram.ngram(ds.NEU_DICT_SELF, 1, is_self_training=True)
     ds.POS_UNI_GRAM_SELF, is_success = commons.dict_update(ds.POS_UNI_GRAM, pos_t)
     ds.NEG_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEG_UNI_GRAM, neg_t)
     ds.NEU_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEU_UNI_GRAM, neu_t)
@@ -311,13 +312,13 @@ def get_result(test_dict):
     :param test_dict:
     :return:
     """
-    current_iteration = ds.CURRENT_ITERATION - 1
+    current_iteration = ds.CURRENT_ITERATION
     ds.LEN_TEST = len(ds.TEST_DICT)
-    if current_iteration == 0:
+    if current_iteration == 1:
         ds.LEN_POS = len(ds.POS_DICT)
         ds.LEN_NEG = len(ds.NEG_DICT)
         ds.LEN_NEU = len(ds.NEU_DICT)
-    elif current_iteration > 0:
+    elif current_iteration > 1:
         ds.LEN_POS += len(ds.POS_DICT_SELF)
         ds.LEN_NEG += len(ds.NEG_DICT_SELF)
         ds.LEN_NEU += len(ds.NEU_DICT_SELF)
@@ -386,38 +387,39 @@ def load_iteration_dict(is_self_training):
         neu_list = []
 
         for key in ds.UNLABELED_DICT.keys():
-            tweet = ds.UNLABELED_DICT.get(key)
+            tweet, weight = ds.UNLABELED_DICT.get(key)
             nl = predict(tweet,is_self_training)
             na = predict_probability(tweet,is_self_training)
             max_proba, is_success = predict_probability_compare(nl,na)
-            # NEED TO IMPLEMENT DISTANCE MEASURE AND FROM THAT ONLY
-            # WE NEED TO CALCULATE THE MEASURES..
             if is_success:
-                list = [tweet,nl,max_proba,key]
+                list = [tweet,nl,max_proba,key,weight]
                 if nl == 2.0:
                     pos_list.append(list)
                     pos_count += 1
                 if nl == -2.0:
                     neg_list.append(list)
                     neg_count += 1
-                if nl == 0.0 :
+                if nl == 0.0:
                     neu_list.append(list)
                     neu_count += 1
 
-        pos_list_final = sorted(pos_list, key=lambda pos_list: pos_list[2], reverse=True)
-        neg_list_final = sorted(neg_list, key=lambda neg_list: neg_list[2], reverse=True)
-        neu_list_final = sorted(neu_list, key=lambda neu_list: neu_list[2], reverse=True)
+        pos_list_inter = sorted(pos_list, key=lambda x: x[2], reverse=True)
+        neg_list_inter = sorted(neg_list, key=lambda x: x[2], reverse=True)
+        neu_list_inter = sorted(neu_list, key=lambda x: x[2], reverse=True)
+        pos_list_final = sorted(pos_list_inter, key=lambda x: x[4], reverse=True)
+        neg_list_final = sorted(neg_list_inter, key=lambda x: x[4], reverse=True)
+        neu_list_final = sorted(neu_list_inter, key=lambda x: x[4], reverse=True)
 
         for i in range(0, int(globals.POS_RATIO * increment_limit), 1):
-            temp_pos_dict[str(i)] = pos_list_final[i][0]
+            temp_pos_dict[str(pos_list_final[i][3])] = [pos_list_final[i][0],pos_list_final[i][4]]
             del ds.UNLABELED_DICT[pos_list_final[i][3]]
 
         for i in range(0, int(globals.NEG_RATIO * increment_limit), 1):
-            temp_neg_dict[str(i)] = neg_list_final[i][0]
+            temp_neg_dict[str(neg_list_final[i][3])] = [neg_list_final[i][0],neg_list_final[i][4]]
             del ds.UNLABELED_DICT[neg_list_final[i][3]]
 
         for i in range(0, int(globals.NEU_RATIO * increment_limit), 1):
-            temp_neu_dict[str(i)] = neu_list_final[i][0]
+            temp_neu_dict[str(neu_list_final[i][3])] = [neu_list_final[i][0],neu_list_final[i][4]]
             del ds.UNLABELED_DICT[neu_list_final[i][3]]
     else:
         temp_pos_dict = {}
@@ -458,11 +460,8 @@ def upgrade():
 
 def downgrade():
     for key in ds.POS_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update(
-            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.POS_DICT_SELF.get(key)})
+        ds.UNLABELED_DICT.update({key: [ds.POS_DICT_SELF.get(key)[0],ds.POS_DICT_SELF.get(key)[1] * 0.99]})
     for key in ds.NEG_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update(
-            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.NEG_DICT_SELF.get(key)})
+        ds.UNLABELED_DICT.update({key: [ds.NEG_DICT_SELF.get(key)[0],ds.NEG_DICT_SELF.get(key)[1] * 0.99]})
     for key in ds.NEU_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update(
-            {str(cons.DATA_SET_SIZE * (ds.CURRENT_ITERATION + 1) + int(key)): ds.NEU_DICT_SELF.get(key)})
+        ds.UNLABELED_DICT.update({key: [ds.NEU_DICT_SELF.get(key)[0],ds.NEU_DICT_SELF.get(key)[1] * 0.99]})
