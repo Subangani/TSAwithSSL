@@ -1,11 +1,11 @@
 # This for loading dictionaries of NRC,BingLui,senti140 Lexicons
 def load_generic_dictionary(file_name):
-    lexicon_dict={}
-    f0=open(file_name,'r')
+    lexicon_dict = {}
+    f0 = open(file_name, 'r')
     line = f0.readline()
     while line:
-        row= line.split("\t")
-        line=f0.readline()
+        row = line.split("\t")
+        line = f0.readline()
         lexicon_dict.update({row[0]: row[1]})
     f0.close()
     return lexicon_dict
@@ -40,34 +40,34 @@ def load_afinn_dictionary(filename):
 
 # This is for loading sentiwordnet dictionaries
 def load_senti_word_net_dictionary(filename):
-    sentiWordnetDict={}
-    tempDictionary={}
-    f0=open(filename,'r')
+    sentiWordnetDict = {}
+    tempDictionary = {}
+    f0 = open(filename, 'r')
     line = f0.readline()
-    line_number=0
+    line_number = 0
     while (line):
-        line_number+=1
+        line_number += 1
         if not ((line.strip()).startswith("#")):
             data = line.split("\t")
             wordTypeMarker = data[0]
             if (len(data) == 6):
-                synsetScore = float(data[2])- float(data[3])
+                synsetScore = float(data[2]) - float(data[3])
                 synTermsSplit = data[4].split(" ")
                 for synTermSplit in synTermsSplit:
                     synTermAndRank = synTermSplit.split("#")
                     synTerm = synTermAndRank[0] + "#" + wordTypeMarker
                     synTermRank = int(synTermAndRank[1]);
                     if not (tempDictionary.has_key(synTerm)):
-                        tempDictionary[str(synTerm)]={}
-                    tempDictionary[str(synTerm)][str(synTermRank)]=synsetScore
+                        tempDictionary[str(synTerm)] = {}
+                    tempDictionary[str(synTerm)][str(synTermRank)] = synsetScore
         line = f0.readline()
     for k1, v1 in tempDictionary.iteritems():
         score = 0.0
         sum = 0.0
         for k2, v2 in v1.iteritems():
-            score += v2/ float(k2)
-            sum += 1.0 /float(k2)
+            score += v2 / float(k2)
+            sum += 1.0 / float(k2)
         score /= sum
-        sentiWordnetDict[k1]=score
+        sentiWordnetDict[k1] = score
     f0.close()
     return sentiWordnetDict

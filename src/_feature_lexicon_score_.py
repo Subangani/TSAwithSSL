@@ -1,9 +1,11 @@
 from __future__ import division
-import _feature_lexicon_dict_load_ as dict_load
+
 import nltk
 
+import _feature_lexicon_dict_load_ as dict_load
 
-def get_ngram_word(words,gram):
+
+def get_ngram_word(words, gram):
     ngram_list = []
     for i in range(len(words) + 1 - gram):
         temp = ""
@@ -66,8 +68,8 @@ def get_afinn_111_score(tweet):
 
 def get_senti140_score(tweet):
     words = tweet.split()
-    unigram_list = get_ngram_word(words,1)
-    uni_score=0.0
+    unigram_list = get_ngram_word(words, 1)
+    uni_score = 0.0
     for word in unigram_list:
         if dict_load.SENTI_140_UNIGRAM_DICT.has_key(word):
             uni_score += float(dict_load.SENTI_140_UNIGRAM_DICT.get(word))
@@ -78,7 +80,7 @@ def get_senti140_score(tweet):
 
 def get_NRC_score(tweet):
     words = tweet.split()
-    unigram_list = get_ngram_word(words,1)
+    unigram_list = get_ngram_word(words, 1)
     uni_score = 0.0
     hash_score = 0.0
     for word in unigram_list:
@@ -87,7 +89,7 @@ def get_NRC_score(tweet):
         if dict_load.NRC_UNIGRAM_DICT.has_key((word + "_NEG")):
             uni_score -= float(dict_load.NRC_UNIGRAM_DICT.get(word))
         if list(word)[0] == '#':
-            ar=list(word)
+            ar = list(word)
             ar.remove("#")
             word = ''.join(ar)
             if not dict_load.NRC_HASHTAG_DICT.get(word) is None:
@@ -95,7 +97,7 @@ def get_NRC_score(tweet):
                     hash_score += 1.0
                 elif dict_load.NRC_HASHTAG_DICT.get(word) == 'negative\n':
                     hash_score -= 1.0
-    return uni_score,hash_score
+    return uni_score, hash_score
 
 
 def get_senti_word_net_score(tweet):
@@ -106,18 +108,18 @@ def get_senti_word_net_score(tweet):
                  'r': ['RB', 'RBR', 'RBS']}
         text = tweet.split()
         tags = nltk.pos_tag(text)
-        tagged_tweets=[]
-        for i in range(0,len(tags)):
+        tagged_tweets = []
+        for i in range(0, len(tags)):
             if tags[i][1] in nlpos['a']:
-                tagged_tweets.append(tags[i][0]+"#a")
+                tagged_tweets.append(tags[i][0] + "#a")
             elif tags[i][1] in nlpos['n']:
-                tagged_tweets.append(tags[i][0]+"#n")
+                tagged_tweets.append(tags[i][0] + "#n")
             elif tags[i][1] in nlpos['v']:
-                tagged_tweets.append(tags[i][0]+"#v")
+                tagged_tweets.append(tags[i][0] + "#v")
             elif tags[i][1] in nlpos['r']:
-                tagged_tweets.append(tags[i][0]+"#r")
+                tagged_tweets.append(tags[i][0] + "#r")
         score = 0.0
-        for i in range(0,len(tagged_tweets)):
+        for i in range(0, len(tagged_tweets)):
             if tagged_tweets[i] in dict_load.SENTI_WORD_NET_DICT:
                 score += float(dict_load.SENTI_WORD_NET_DICT.get(tagged_tweets[i]))
         return score
@@ -126,7 +128,7 @@ def get_senti_word_net_score(tweet):
 
 
 def get_binliu_score(tweet):
-    score=0.0
+    score = 0.0
     for word in tweet.split():
         if dict_load.BING_LIU_DICT.has_key(word):
             if dict_load.BING_LIU_DICT.get(word) == 'positive\n':

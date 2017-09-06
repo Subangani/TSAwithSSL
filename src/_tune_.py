@@ -1,19 +1,19 @@
 import csv
+import sys
+
+import numpy as np
+from sklearn import preprocessing as pr
+from sklearn import svm
+from sklearn.grid_search import GridSearchCV
+
+import _config_constants_ as cons
+import _config_globals_ as globals
 import _feature_lexicon_score_ as lexicon_score
+import _feature_micro_blog_score_ as micro_blog_score
 import _feature_n_gram_ as ngram
 import _feature_postag_ as postag
 import _pre_process_ as ppros
 import _writing_style_ as ws
-import _feature_micro_blog_score_ as micro_blog_score
-from sklearn import preprocessing as pr
-import numpy as np
-from xgboost import XGBClassifier
-from sklearn.grid_search import GridSearchCV
-from sklearn.model_selection import PredefinedSplit
-import _config_globals_ as globals
-from sklearn import svm
-import _config_constants_ as cons
-import sys
 
 TOTAL_TRAIN_DATA = 20633
 
@@ -22,7 +22,7 @@ NEG_DATA = {}
 NEU_DATA = {}
 
 
-def load_matrix_sub(process_dict,label):
+def load_matrix_sub(process_dict, label):
     keys = process_dict.keys()
     vectors = []
     labels = []
@@ -32,7 +32,7 @@ def load_matrix_sub(process_dict,label):
             z = map_tweet(line)
             vectors.append(z)
             labels.append(float(label))
-    return vectors,labels
+    return vectors, labels
 
 
 def map_tweet(tweet):
@@ -77,6 +77,7 @@ def map_tweet(tweet):
     vector.extend(unigram_score)
     return vector
 
+
 with open("../dataset/semeval.csv", 'r') as main_dataset:
     main = csv.reader(main_dataset)
     pos_completed = neg_completed = neu_completed = False
@@ -99,17 +100,16 @@ with open("../dataset/semeval.csv", 'r') as main_dataset:
             neu_completed = True
 
         if pos_completed and \
-            neg_completed and \
-            neu_completed:
+                neg_completed and \
+                neu_completed:
             break
 
-
-POS_UNI_GRAM,POS_POST_UNI_GRAM = ngram.ngram(POS_DATA,1)
-NEG_UNI_GRAM,NEG_POST_UNI_GRAM = ngram.ngram(NEG_DATA,1)
-NEU_UNI_GRAM,NEU_POST_UNI_GRAM = ngram.ngram(NEU_DATA,1)
-pos_vec, pos_lab = load_matrix_sub(POS_DATA,2.0)
-neg_vec, neg_lab = load_matrix_sub(NEG_DATA,-2.0)
-neu_vec, neu_lab = load_matrix_sub(NEU_DATA,0.0)
+POS_UNI_GRAM, POS_POST_UNI_GRAM = ngram.ngram(POS_DATA, 1)
+NEG_UNI_GRAM, NEG_POST_UNI_GRAM = ngram.ngram(NEG_DATA, 1)
+NEU_UNI_GRAM, NEU_POST_UNI_GRAM = ngram.ngram(NEU_DATA, 1)
+pos_vec, pos_lab = load_matrix_sub(POS_DATA, 2.0)
+neg_vec, neg_lab = load_matrix_sub(NEG_DATA, -2.0)
+neu_vec, neu_lab = load_matrix_sub(NEU_DATA, 0.0)
 vectors = pos_vec + neg_vec + neu_vec
 labels = pos_lab + neg_lab + neu_lab
 vectors_scaled = pr.scale(np.array(vectors))
@@ -125,12 +125,13 @@ vectors = vectors.tolist()
 
 
 def get_best_svm():
-    parameters = {'kernel': ['linear', 'rbf'], 'C': [0.01*i for i in range(1, 100, 1)],
-                  'gamma': [0.01*i for i in range(1, 4, 1)]}
+    parameters = {'kernel': ['linear', 'rbf'], 'C': [0.01 * i for i in range(1, 100, 1)],
+                  'gamma': [0.01 * i for i in range(1, 4, 1)]}
     svr = svm.SVC(class_weight={2.0: 1.47, 0.0: 1.0, -2.0: 3.125})
     grid = GridSearchCV(svr, parameters, scoring='f1_weighted', n_jobs=-1, cv=10)
     tunes_model = grid.fit(vectors, labels)
     print tunes_model.best_params_, tunes_model.best_score_
+
 
 #
 # def get_best_xgboost():
@@ -144,7 +145,7 @@ def get_best_svm():
 #     print tuned_model
 #     print tuned_model.best_params_,tuned_model.best_score_
 
-if sys.argv[1] == cons.CLASSIFIER_SVM :
+if sys.argv[1] == cons.CLASSIFIER_SVM:
     print "Tuning SVM"
     get_best_svm()
 elif sys.argv[1] == cons.CLASSIFIER_XGBOOST:

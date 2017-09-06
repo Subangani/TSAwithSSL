@@ -1,4 +1,5 @@
 from __future__ import division
+
 import csv
 
 
@@ -27,5 +28,5 @@ def load_unicode_emoticon_dictionary(filename):
     with open(filename, "r") as unlabeled_file:
         reader = csv.reader(unlabeled_file)
         for line in reader:
-            emo_score_list.update({str(line[0]):float(line[4])})
+            emo_score_list.update({str(line[0]): float(line[4])})
     return emo_score_list

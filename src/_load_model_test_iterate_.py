@@ -1,25 +1,28 @@
+import csv
 import warnings
-import _config_globals_ as globals
-import _feature_lexicon_score_ as lexicon_score
-import _feature_n_gram_ as ngram
-import _feature_postag_ as postag
-import _pre_process_ as ppros
-import _writing_style_ as ws
-import _feature_micro_blog_score_ as micro_blog_score
-import _global_data_store_ as ds
-import _config_constants_ as cons
-import _generic_commons_ as commons
+
+import numpy as np
 from sklearn import preprocessing as pr, svm
 from xgboost import XGBClassifier
-import numpy as np
-import csv
+
+import _config_constants_ as cons
+import _config_globals_ as globals
+import _feature_lexicon_score_ as lexicon_score
+import _feature_micro_blog_score_ as micro_blog_score
+import _feature_n_gram_ as ngram
+import _feature_postag_ as postag
+import _generic_commons_ as commons
+import _global_data_store_ as ds
+import _pre_process_ as ppros
+import _writing_style_ as ws
+
 warnings.filterwarnings('ignore')
 
 
 def get_file_prefix():
-    return  str(globals.LABEL_LIMIT) + "_" + str(globals.FEATURE_SET_CODE) + "_" + \
-                      str(globals.TEST_LIMIT) + "_" + str(globals.INCREMENT_LIMIT) + "_" + \
-                      str(globals.NO_OF_ITERATION) + "_" + str(globals.DEFAULT_CLASSIFIER) + "_"
+    return str(globals.LABEL_LIMIT) + "_" + str(globals.FEATURE_SET_CODE) + "_" + \
+           str(globals.TEST_LIMIT) + "_" + str(globals.INCREMENT_LIMIT) + "_" + \
+           str(globals.NO_OF_ITERATION) + "_" + str(globals.DEFAULT_CLASSIFIER) + "_"
 
 
 def load_initial_dictionaries(type):
@@ -40,7 +43,7 @@ def load_initial_dictionaries(type):
                 count = count + 1
                 tweet = line[5]
                 if count < 10000:
-                    unlabel_dict.update({str(count): [tweet,1]})
+                    unlabel_dict.update({str(count): [tweet, 1]})
                 else:
                     break
     else:
@@ -53,19 +56,19 @@ def load_initial_dictionaries(type):
             for line in main:
                 if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
                     pos_dict.update({str(pos_count): str(line[2])})
-                    pos_count +=1
+                    pos_count += 1
                 elif line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
                     neg_dict.update({str(neg_count): str(line[2])})
-                    neg_count +=1
+                    neg_count += 1
                 elif line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
                     neu_dict.update({str(neu_count): str(line[2])})
-                    neu_count +=1
+                    neu_count += 1
                 else:
                     if not type:
                         break
                     else:
-                        unlabel_dict.update({str(unlabel_count): [str(line[2]),1]})
-                        unlabel_count +=1
+                        unlabel_dict.update({str(unlabel_count): [str(line[2]), 1]})
+                        unlabel_count += 1
         ds.POS_DICT = pos_dict
         ds.NEG_DICT = neg_dict
         ds.NEU_DICT = neu_dict
@@ -73,7 +76,7 @@ def load_initial_dictionaries(type):
     return
 
 
-def map_tweet(tweet,is_self_training):
+def map_tweet(tweet, is_self_training):
     """
     This function use to map the tweet
     :param tweet:
@@ -88,15 +91,18 @@ def map_tweet(tweet,is_self_training):
     preprocessed_tweet = ppros.pre_process_tweet(tweet)
     postag_tweet = postag.pos_tag_string(preprocessed_tweet)
 
-# Score obtaining phase these are common for selftraining except obtaining unigram and
-# postag unigram score
+    # Score obtaining phase these are common for selftraining except obtaining unigram and
+    # postag unigram score
 
     if not is_self_training:
         unigram_score = ngram.score(preprocessed_tweet, ds.POS_UNI_GRAM, ds.NEG_UNI_GRAM, ds.NEU_UNI_GRAM, 1)
-        post_unigram_score = ngram.score(postag_tweet, ds.POS_POST_UNI_GRAM, ds.NEG_POST_UNI_GRAM, ds.NEU_POST_UNI_GRAM, 1)
+        post_unigram_score = ngram.score(postag_tweet, ds.POS_POST_UNI_GRAM, ds.NEG_POST_UNI_GRAM, ds.NEU_POST_UNI_GRAM,
+                                         1)
     else:
-        unigram_score = ngram.score(preprocessed_tweet, ds.POS_UNI_GRAM_SELF, ds.NEG_UNI_GRAM_SELF, ds.NEU_UNI_GRAM_SELF, 1)
-        post_unigram_score = ngram.score(postag_tweet, ds.POS_POST_UNI_GRAM_SELF, ds.NEG_POST_UNI_GRAM_SELF, ds.NEU_POST_UNI_GRAM_SELF, 1)
+        unigram_score = ngram.score(preprocessed_tweet, ds.POS_UNI_GRAM_SELF, ds.NEG_UNI_GRAM_SELF,
+                                    ds.NEU_UNI_GRAM_SELF, 1)
+        post_unigram_score = ngram.score(postag_tweet, ds.POS_POST_UNI_GRAM_SELF, ds.NEG_POST_UNI_GRAM_SELF,
+                                         ds.NEU_POST_UNI_GRAM_SELF, 1)
 
     lexicon_score_gen = lexicon_score.get_lexicon_score(preprocessed_tweet)
     afinn_score_96 = lexicon_score.get_afinn_99_score(preprocessed_tweet)
@@ -111,9 +117,9 @@ def map_tweet(tweet,is_self_training):
 
     writing_style = ws.writing_style_vector(tweet)
 
-# These classification are just for ease of division in general practice
-# Generally we use default feature code 15 which takes all the feature
-# You can evaluate that by analysing below code blocks :)
+    # These classification are just for ease of division in general practice
+    # Generally we use default feature code 15 which takes all the feature
+    # You can evaluate that by analysing below code blocks :)
 
     if feature_set_code % 2 == 1:
         vector.append(afinn_score_96)
@@ -134,7 +140,7 @@ def map_tweet(tweet,is_self_training):
     return vector
 
 
-def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
+def load_matrix_sub(process_dict, label=0.0, is_self_training=False):
     """
     :param process_dict:
     :param label:
@@ -150,12 +156,12 @@ def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
             labels = []
             k_pol = 0
             for key in keys:
-                if is_self_training :
+                if is_self_training:
                     line, weight = process_dict.get(key)
-                else :
+                else:
                     line = process_dict.get(key)
                 k_pol += 1
-                z = map_tweet(line,is_self_training)
+                z = map_tweet(line, is_self_training)
                 vectors.append(z)
                 labels.append(float(label))
         else:
@@ -170,12 +176,12 @@ def load_matrix_sub(process_dict,label=0.0, is_self_training=False):
 
 
 def get_vectors_and_labels():
-    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1,is_self_training=False)
-    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1,is_self_training=False)
-    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1,is_self_training=False)
-    pos_vec, pos_lab, kpos = load_matrix_sub(process_dict=ds.POS_DICT,label=2.0, is_self_training=False)
-    neg_vec, neg_lab, kneg = load_matrix_sub(process_dict=ds.NEG_DICT,label=-2.0, is_self_training=False)
-    neu_vec, neu_lab, kneu = load_matrix_sub(process_dict=ds.NEU_DICT,label=0.0, is_self_training=False)
+    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1, is_self_training=False)
+    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1, is_self_training=False)
+    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1, is_self_training=False)
+    pos_vec, pos_lab, kpos = load_matrix_sub(process_dict=ds.POS_DICT, label=2.0, is_self_training=False)
+    neg_vec, neg_lab, kneg = load_matrix_sub(process_dict=ds.NEG_DICT, label=-2.0, is_self_training=False)
+    neu_vec, neu_lab, kneu = load_matrix_sub(process_dict=ds.NEU_DICT, label=0.0, is_self_training=False)
     ds.VECTORS = pos_vec + neg_vec + neu_vec
     ds.LABELS = pos_lab + neg_lab + neu_lab
     is_success = True
@@ -196,9 +202,9 @@ def get_vectors_and_labels_self():
     ds.POS_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.POS_POST_UNI_GRAM, pos_post_t)
     ds.NEG_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEG_POST_UNI_GRAM, neg_post_t)
     ds.NEU_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEU_POST_UNI_GRAM, neu_post_t)
-    pos_vec, pos_lab, kpos = load_matrix_sub(ds.POS_DICT_SELF, 2.0,True)
-    neg_vec, neg_lab, kneg = load_matrix_sub(ds.NEG_DICT_SELF, -2.0,True)
-    neu_vec, neu_lab, kneu = load_matrix_sub(ds.NEU_DICT_SELF, 0.0,True)
+    pos_vec, pos_lab, kpos = load_matrix_sub(ds.POS_DICT_SELF, 2.0, True)
+    neg_vec, neg_lab, kneg = load_matrix_sub(ds.NEG_DICT_SELF, -2.0, True)
+    neu_vec, neu_lab, kneu = load_matrix_sub(ds.NEU_DICT_SELF, 0.0, True)
     ds.VECTORS_SELF = ds.VECTORS + pos_vec + neg_vec + neu_vec
     ds.LABELS_SELF = ds.LABELS + pos_lab + neg_lab + neu_lab
     return is_success
@@ -229,7 +235,7 @@ def generate_model(is_self_training=False):
         gamma = globals.DEFAULT_GAMMA_SVM
         class_weights = globals.DEFAULT_CLASS_WEIGHTS
         model = svm.SVC(kernel=kernel_function, C=c_parameter,
-                        class_weight=class_weights, gamma=gamma,probability=True)
+                        class_weight=class_weights, gamma=gamma, probability=True)
         model.fit(vectors, labels)
     elif classifier_type == cons.CLASSIFIER_XGBOOST:
         learning_rate = globals.DEFAULT_LEARNING_RATE
@@ -242,13 +248,13 @@ def generate_model(is_self_training=False):
         reg_alpha = globals.DEFAULT_REGRESSION_ALPHA
         n_estimators = globals.DEFAULT_N_ESTIMATORS
         colsample_bytree = globals.DEFAULT_COLSAMPLE_BYTREE
-        model = XGBClassifier(learning_rate = learning_rate, max_depth = max_depth,
-                              min_child_weight = min_child_weight,silent = silent,
-                              objective = objective, subsample = subsample,gamma = gamma,
-                              reg_alpha = reg_alpha, n_estimators = n_estimators,
-                              colsample_bytree = colsample_bytree,)
+        model = XGBClassifier(learning_rate=learning_rate, max_depth=max_depth,
+                              min_child_weight=min_child_weight, silent=silent,
+                              objective=objective, subsample=subsample, gamma=gamma,
+                              reg_alpha=reg_alpha, n_estimators=n_estimators,
+                              colsample_bytree=colsample_bytree, )
         vectors_a = np.asarray(vectors)
-        model.fit(vectors_a,labels)
+        model.fit(vectors_a, labels)
     else:
         model = None
     ds.SCALAR = scaler
@@ -257,7 +263,7 @@ def generate_model(is_self_training=False):
     return
 
 
-def predict(tweet,is_self_training):
+def predict(tweet, is_self_training):
     z = map_tweet(tweet, is_self_training)
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
@@ -265,7 +271,7 @@ def predict(tweet,is_self_training):
     return ds.MODEL.predict([z]).tolist()[0]
 
 
-def predict_probability(tweet,is_self_training):
+def predict_probability(tweet, is_self_training):
     z = map_tweet(tweet, is_self_training)
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
@@ -273,7 +279,7 @@ def predict_probability(tweet,is_self_training):
     return ds.MODEL.predict_proba([z]).tolist()[0]
 
 
-def predict_probability_compare(nl,na):
+def predict_probability_compare(nl, na):
     max_proba = max(na)
     if max > 0.5:
         if na[0] == max_proba and nl == -2.0:
@@ -298,7 +304,7 @@ def store_test(is_self_training):
             line = list(line)
             tweet = line[2]
             s = line[1]
-            nl = predict(tweet,is_self_training)
+            nl = predict(tweet, is_self_training)
             test_dict.update({str(count): [s, tweet, nl]})
             count = count + 1
             if count >= limit:
@@ -352,20 +358,21 @@ def get_result(test_dict):
                     FNeu_N += 1
     else:
         print "No test data"
-    accuracy = commons.get_divided_value((TP + TN + TNeu),(TP + TN + TNeu + FP_N + FP_Neu + FN_P +FN_Neu + FNeu_P + FNeu_N))
+    accuracy = commons.get_divided_value((TP + TN + TNeu),
+                                         (TP + TN + TNeu + FP_N + FP_Neu + FN_P + FN_Neu + FNeu_P + FNeu_N))
     pre_p = commons.get_divided_value(TP, (FP_N + FP_Neu + TP))
     pre_n = commons.get_divided_value(TN, (FN_P + FN_Neu + TN))
     pre_neu = commons.get_divided_value(TNeu, (FNeu_P + FNeu_N + TNeu))
     re_p = commons.get_divided_value(TP, (FN_P + FNeu_P + TP))
     re_n = commons.get_divided_value(TN, (FP_N + FNeu_N + TN))
     re_neu = commons.get_divided_value(TNeu, (FNeu_P + FNeu_N + TNeu))
-    f_score_p = 2 * commons.get_divided_value((re_p * pre_p),(re_p + pre_p))
-    f_score_n = 2 * commons.get_divided_value((re_n * pre_n),(re_n + pre_n))
-    f_score = round((f_score_p + f_score_n)/2,4)
+    f_score_p = 2 * commons.get_divided_value((re_p * pre_p), (re_p + pre_p))
+    f_score_n = 2 * commons.get_divided_value((re_n * pre_n), (re_n + pre_n))
+    f_score = round((f_score_p + f_score_n) / 2, 4)
 
-    return ds.LEN_POS,ds.LEN_NEG,ds.LEN_NEU,ds.LEN_TEST,globals.FEATURE_SET_CODE,current_iteration,\
-        accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
-        f_score_p, f_score_n,f_score
+    return ds.LEN_POS, ds.LEN_NEG, ds.LEN_NEU, ds.LEN_TEST, globals.FEATURE_SET_CODE, current_iteration, \
+           accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
+           f_score_p, f_score_n, f_score
 
 
 def load_iteration_dict(is_self_training):
@@ -388,11 +395,11 @@ def load_iteration_dict(is_self_training):
 
         for key in ds.UNLABELED_DICT.keys():
             tweet, weight = ds.UNLABELED_DICT.get(key)
-            nl = predict(tweet,is_self_training)
-            na = predict_probability(tweet,is_self_training)
-            max_proba, is_success = predict_probability_compare(nl,na)
+            nl = predict(tweet, is_self_training)
+            na = predict_probability(tweet, is_self_training)
+            max_proba, is_success = predict_probability_compare(nl, na)
             if is_success:
-                list = [tweet,nl,max_proba,key,weight]
+                list = [tweet, nl, max_proba, key, weight]
                 if nl == 2.0:
                     pos_list.append(list)
                     pos_count += 1
@@ -411,15 +418,15 @@ def load_iteration_dict(is_self_training):
         neu_list_final = sorted(neu_list_inter, key=lambda x: x[4], reverse=True)
 
         for i in range(0, int(globals.POS_RATIO * increment_limit), 1):
-            temp_pos_dict[str(pos_list_final[i][3])] = [pos_list_final[i][0],pos_list_final[i][4]]
+            temp_pos_dict[str(pos_list_final[i][3])] = [pos_list_final[i][0], pos_list_final[i][4]]
             del ds.UNLABELED_DICT[pos_list_final[i][3]]
 
         for i in range(0, int(globals.NEG_RATIO * increment_limit), 1):
-            temp_neg_dict[str(neg_list_final[i][3])] = [neg_list_final[i][0],neg_list_final[i][4]]
+            temp_neg_dict[str(neg_list_final[i][3])] = [neg_list_final[i][0], neg_list_final[i][4]]
             del ds.UNLABELED_DICT[neg_list_final[i][3]]
 
         for i in range(0, int(globals.NEU_RATIO * increment_limit), 1):
-            temp_neu_dict[str(neu_list_final[i][3])] = [neu_list_final[i][0],neu_list_final[i][4]]
+            temp_neu_dict[str(neu_list_final[i][3])] = [neu_list_final[i][0], neu_list_final[i][4]]
             del ds.UNLABELED_DICT[neu_list_final[i][3]]
     else:
         temp_pos_dict = {}
@@ -456,12 +463,12 @@ def upgrade():
     ds.NEU_POST_UNI_GRAM = ds.NEU_POST_UNI_GRAM_SELF
     ds.VECTORS = ds.VECTORS_SELF
     ds.LABELS = ds.LABELS_SELF
-    
+
 
 def downgrade():
     for key in ds.POS_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update({key: [ds.POS_DICT_SELF.get(key)[0],ds.POS_DICT_SELF.get(key)[1] * 0.99]})
+        ds.UNLABELED_DICT.update({key: [ds.POS_DICT_SELF.get(key)[0], ds.POS_DICT_SELF.get(key)[1] * 0.99]})
     for key in ds.NEG_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update({key: [ds.NEG_DICT_SELF.get(key)[0],ds.NEG_DICT_SELF.get(key)[1] * 0.99]})
+        ds.UNLABELED_DICT.update({key: [ds.NEG_DICT_SELF.get(key)[0], ds.NEG_DICT_SELF.get(key)[1] * 0.99]})
     for key in ds.NEU_DICT_SELF.keys():
-        ds.UNLABELED_DICT.update({key: [ds.NEU_DICT_SELF.get(key)[0],ds.NEU_DICT_SELF.get(key)[1] * 0.99]})
+        ds.UNLABELED_DICT.update({key: [ds.NEU_DICT_SELF.get(key)[0], ds.NEU_DICT_SELF.get(key)[1] * 0.99]})

@@ -24,6 +24,3 @@ BING_LIU_DICT = load_commons.load_generic_dictionary(BING_LIU_FILE)
 
 SENTI_WORD_NET_FILE = "../resource/sentiword_net.txt"
 SENTI_WORD_NET_DICT = load_commons.load_senti_word_net_dictionary(SENTI_WORD_NET_FILE)
-
-
-

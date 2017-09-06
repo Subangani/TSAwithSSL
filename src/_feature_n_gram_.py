@@ -1,5 +1,5 @@
-import _generic_commons_ as commons
 import _feature_postag_ as postag
+import _generic_commons_ as commons
 
 
 def dict(words, gram):
@@ -41,8 +41,8 @@ def ngram(file_dict, gram, is_self_training):
     keys = file_dict.keys()
     for line_key in keys:
         try:
-            if is_self_training :
-                line,weight = file_dict.get(line_key)
+            if is_self_training:
+                line, weight = file_dict.get(line_key)
             else:
                 line = file_dict.get(line_key)
             words = line.split()
@@ -101,7 +101,3 @@ def get_count(gram, pol):
     except:
         TypeError
     return count
-
-
-
-

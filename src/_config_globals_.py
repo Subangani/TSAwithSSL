@@ -1,5 +1,5 @@
-import _config_setup_ as setup
 import _config_constants_ as cons
+import _config_setup_ as setup
 
 POS_RATIO = 0.34213
 NEG_RATIO = 0.15659
@@ -9,7 +9,6 @@ LABEL_LIMIT = int(setup.LABEL_RATIO * cons.DATA_SET_SIZE)
 POS_COUNT_LIMIT = int(LABEL_LIMIT * POS_RATIO)
 NEG_COUNT_LIMIT = int(LABEL_LIMIT * NEG_RATIO)
 NEU_COUNT_LIMIT = int(LABEL_LIMIT * NEU_RATIO)
-
 
 # CONSTANT RELATED TO SELF-TRAINING
 
@@ -45,4 +44,3 @@ CSV_HEADER = ["PositiveTrainSet", "NegativeTrainSet", "NeutralTrainSet",
               "PrecisionPositive", "PrecisionNegative", "PrecisionNeutral",
               "RecallPositive", "RecallNegative", "RecallNeutral",
               "fScorePositive", "fScoreNegative", "fScoreAverage"]
-

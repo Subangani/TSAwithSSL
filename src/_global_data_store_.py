@@ -25,7 +25,6 @@ LEN_NEG = 0
 LEN_NEU = 0
 LEN_TEST = 0
 
-
 # These are for temporary storing things for SELF TRAINING
 # 1. These are for storing LABEL train data in every iteration
 # no continuous accumulation will be happen at here.
@@ -40,8 +39,7 @@ NEU_DICT_SELF = {}
 VECTORS_SELF = []
 LABELS_SELF = []
 
-
-# These are unigram storing dictionaries for selftraining and normal
+# These are uni gram storing dictionaries for self training and normal
 
 POS_UNI_GRAM = {}
 NEG_UNI_GRAM = {}

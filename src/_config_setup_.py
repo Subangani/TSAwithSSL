@@ -4,7 +4,7 @@ import _config_constants_ as cons
 # Parameters related to training model (some constants are important to
 # look nice)
 
-LABEL_RATIO = 0.4
+LABEL_RATIO = 0.2
 TEST_LIMIT = 13000
 INCREMENT_LIMIT = 20
 NO_OF_ITERATION = 20
@@ -34,6 +34,3 @@ elif DEFAULT_CLASSIFIER == cons.CLASSIFIER_XGBOOST:
     DEFAULT_REGRESSION_ALPHA = 1e-05
     DEFAULT_N_ESTIMATORS = 275
     DEFAULT_COLSAMPLE_BYTREE = 0.6
-
-
-

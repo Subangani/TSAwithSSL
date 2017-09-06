@@ -1,7 +1,3 @@
-import csv
-import _config_globals_ as globals
-
-
 def temp_difference_cal(time_list):
     """
     This function is used when a set of time values are added and difference between last two are obtained
@@ -31,18 +27,17 @@ def dict_update(original, temp):
         global_key_value = original_temp.get(key)
         local_key_value = temp.get(key)
         if key not in original_temp.keys():
-            result.update({key:local_key_value})
+            result.update({key: local_key_value})
         else:
             result.update({key: local_key_value + global_key_value})
             del original_temp[key]
     result.update(original_temp)
-    return result,is_success
+    return result, is_success
 
 
 def get_divided_value(numerator, denominator):
     if denominator == 0:
         return 0.0
     else:
-        result = numerator/(denominator * 1.0)
+        result = numerator / (denominator * 1.0)
         return round(result, 4)
-

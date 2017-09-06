@@ -45,12 +45,12 @@ def surround_by_signs(tweet):
     :param tweet:
     :return:
     """
-    highlight = ['"',"'","*"]
+    highlight = ['"', "'", "*"]
     count = 0
     if len(tweet) != 0:
         for c in tweet:
-            if c[0] == c[len(c)-1] and c[0] in highlight:
-                count = count + 1 ;
+            if c[0] == c[len(c) - 1] and c[0] in highlight:
+                count = count + 1;
     return count
 
 
@@ -60,5 +60,4 @@ def writing_style_vector(tweet):
     que_count = question_mark_count(tweet)
     cap_count = capital_count_in_a_word(tweet)
     surr_count = surround_by_signs(tweet)
-    return [cap_word, exc_count, que_count, cap_count,surr_count]
-
+    return [cap_word, exc_count, que_count, cap_count, surr_count]
