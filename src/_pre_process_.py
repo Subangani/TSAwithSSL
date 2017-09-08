@@ -37,17 +37,17 @@ def negate(tweets):
         negation_list.append(line.split(None, 1)[0]);
         line = fn.readline()
     fn.close()
-    puncuation_marks = [".", ":", ";", "!", "?"]
+    punctuation_marks = [".", ":", ";", "!", "?"]
     break_words = ["but"]
 
     for i in range(len(tweets)):
         if tweets[i] in negation_list:
             j = i + 1
             while j < len(tweets):
-                if tweets[j][-1] not in (puncuation_marks and break_words):
+                if tweets[j][-1] not in (punctuation_marks and break_words):
                     tweets[j] = tweets[j] + "_NEG"
                     j = j + 1
-                elif tweets[j][-1] not in (puncuation_marks and break_words):
+                elif tweets[j][-1] not in (punctuation_marks and break_words):
                     tweets[j] = tweets[j][-1] + "_NEG"
                 else:
                     break

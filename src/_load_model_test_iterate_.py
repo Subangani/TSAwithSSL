@@ -154,34 +154,30 @@ def load_matrix_sub(process_dict, label=0.0, is_self_training=False):
         if len(keys) > 0:
             vectors = []
             labels = []
-            k_pol = 0
             for key in keys:
                 if is_self_training:
                     line, weight = process_dict.get(key)
                 else:
                     line = process_dict.get(key)
-                k_pol += 1
                 z = map_tweet(line, is_self_training)
                 vectors.append(z)
                 labels.append(float(label))
         else:
             vectors = []
             labels = []
-            k_pol = 0
     else:
         vectors = []
         labels = []
-        k_pol = 0
-    return vectors, labels, k_pol
+    return vectors, labels
 
 
 def get_vectors_and_labels():
     ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1, is_self_training=False)
     ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1, is_self_training=False)
     ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1, is_self_training=False)
-    pos_vec, pos_lab, kpos = load_matrix_sub(process_dict=ds.POS_DICT, label=2.0, is_self_training=False)
-    neg_vec, neg_lab, kneg = load_matrix_sub(process_dict=ds.NEG_DICT, label=-2.0, is_self_training=False)
-    neu_vec, neu_lab, kneu = load_matrix_sub(process_dict=ds.NEU_DICT, label=0.0, is_self_training=False)
+    pos_vec, pos_lab = load_matrix_sub(process_dict=ds.POS_DICT, label=2.0, is_self_training=False)
+    neg_vec, neg_lab = load_matrix_sub(process_dict=ds.NEG_DICT, label=-2.0, is_self_training=False)
+    neu_vec, neu_lab = load_matrix_sub(process_dict=ds.NEU_DICT, label=0.0, is_self_training=False)
     ds.VECTORS = pos_vec + neg_vec + neu_vec
     ds.LABELS = pos_lab + neg_lab + neu_lab
     is_success = True
@@ -202,11 +198,29 @@ def get_vectors_and_labels_self():
     ds.POS_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.POS_POST_UNI_GRAM, pos_post_t)
     ds.NEG_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEG_POST_UNI_GRAM, neg_post_t)
     ds.NEU_POST_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEU_POST_UNI_GRAM, neu_post_t)
-    pos_vec, pos_lab, kpos = load_matrix_sub(ds.POS_DICT_SELF, 2.0, True)
-    neg_vec, neg_lab, kneg = load_matrix_sub(ds.NEG_DICT_SELF, -2.0, True)
-    neu_vec, neu_lab, kneu = load_matrix_sub(ds.NEU_DICT_SELF, 0.0, True)
-    ds.VECTORS_SELF = ds.VECTORS + pos_vec + neg_vec + neu_vec
-    ds.LABELS_SELF = ds.LABELS + pos_lab + neg_lab + neu_lab
+    temp_pos_dict = ds.POS_DICT.copy()
+    temp_neg_dict = ds.NEG_DICT.copy()
+    temp_neu_dict = ds.NEU_DICT.copy()
+    temp_pos_dict_self = ds.POS_DICT_SELF.copy()
+    temp_neg_dict_self = ds.NEG_DICT_SELF.copy()
+    temp_neu_dict_self = ds.NEU_DICT_SELF.copy()
+    temp_pos_dict_final = {}
+    temp_neg_dict_final = {}
+    temp_neu_dict_final = {}
+    for key in temp_pos_dict.keys():
+        temp_pos_dict_final.update({key: [temp_pos_dict.get(key),1]})
+    for key in temp_neg_dict.keys():
+        temp_neg_dict_final.update({key: [temp_neg_dict.get(key), 1]})
+    for key in temp_neu_dict.keys():
+        temp_neu_dict_final.update({key: [temp_neu_dict.get(key), 1]})
+    temp_pos_dict_final.update(temp_pos_dict_self)
+    temp_neg_dict_final.update(temp_neg_dict_self)
+    temp_neu_dict_final.update(temp_neu_dict_self)
+    pos_vec, pos_lab = load_matrix_sub(temp_pos_dict_final, 2.0, True)
+    neg_vec, neg_lab = load_matrix_sub(temp_neg_dict_final, -2.0, True)
+    neu_vec, neu_lab = load_matrix_sub(temp_neu_dict_final, 0.0, True)
+    ds.VECTORS_SELF = pos_vec + neg_vec + neu_vec
+    ds.LABELS_SELF = pos_lab + neg_lab + neu_lab
     return is_success
 
 
@@ -461,6 +475,15 @@ def upgrade():
     ds.POS_POST_UNI_GRAM = ds.POS_POST_UNI_GRAM_SELF
     ds.NEG_POST_UNI_GRAM = ds.NEG_POST_UNI_GRAM_SELF
     ds.NEU_POST_UNI_GRAM = ds.NEU_POST_UNI_GRAM_SELF
+    temp_pos_dict_self = ds.POS_DICT_SELF.copy()
+    temp_neg_dict_self = ds.NEG_DICT_SELF.copy()
+    temp_neu_dict_self = ds.NEU_DICT_SELF.copy()
+    for key in temp_pos_dict_self.keys():
+        ds.POS_DICT.update({key: temp_pos_dict_self.get(key)[0]})
+    for key in temp_neg_dict_self.keys():
+        ds.NEG_DICT.update({key: temp_neg_dict_self.get(key)[0]})
+    for key in temp_neu_dict_self.keys():
+        ds.NEU_DICT.update({key: temp_neu_dict_self.get(key)[0]})
     ds.VECTORS = ds.VECTORS_SELF
     ds.LABELS = ds.LABELS_SELF
 
