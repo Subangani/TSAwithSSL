@@ -55,13 +55,13 @@ def load_initial_dictionaries(type):
             unlabel_count = 1
             for line in main:
                 if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
-                    pos_dict.update({str(pos_count): str(line[2])})
+                    pos_dict.update({str(pos_count): [str(line[2]),1]})
                     pos_count += 1
                 elif line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
-                    neg_dict.update({str(neg_count): str(line[2])})
+                    neg_dict.update({str(neg_count): [str(line[2]), 1]})
                     neg_count += 1
                 elif line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
-                    neu_dict.update({str(neu_count): str(line[2])})
+                    neu_dict.update({str(neu_count): [str(line[2]), 1]})
                     neu_count += 1
                 else:
                     if not type:
@@ -155,10 +155,7 @@ def load_matrix_sub(process_dict, label=0.0, is_self_training=False):
             vectors = []
             labels = []
             for key in keys:
-                if is_self_training:
-                    line, weight = process_dict.get(key)
-                else:
-                    line = process_dict.get(key)
+                line, weight = process_dict.get(key)
                 z = map_tweet(line, is_self_training)
                 vectors.append(z)
                 labels.append(float(label))
@@ -207,12 +204,9 @@ def get_vectors_and_labels_self():
     temp_pos_dict_final = {}
     temp_neg_dict_final = {}
     temp_neu_dict_final = {}
-    for key in temp_pos_dict.keys():
-        temp_pos_dict_final.update({key: [temp_pos_dict.get(key),1]})
-    for key in temp_neg_dict.keys():
-        temp_neg_dict_final.update({key: [temp_neg_dict.get(key), 1]})
-    for key in temp_neu_dict.keys():
-        temp_neu_dict_final.update({key: [temp_neu_dict.get(key), 1]})
+    temp_pos_dict_final.update(temp_pos_dict)
+    temp_neg_dict_final.update(temp_neg_dict)
+    temp_neu_dict_final.update(temp_neu_dict)
     temp_pos_dict_final.update(temp_pos_dict_self)
     temp_neg_dict_final.update(temp_neg_dict_self)
     temp_neu_dict_final.update(temp_neu_dict_self)
@@ -479,11 +473,11 @@ def upgrade():
     temp_neg_dict_self = ds.NEG_DICT_SELF.copy()
     temp_neu_dict_self = ds.NEU_DICT_SELF.copy()
     for key in temp_pos_dict_self.keys():
-        ds.POS_DICT.update({key: temp_pos_dict_self.get(key)[0]})
+        ds.POS_DICT.update({key: [temp_pos_dict_self.get(key)[0], 1]})
     for key in temp_neg_dict_self.keys():
-        ds.NEG_DICT.update({key: temp_neg_dict_self.get(key)[0]})
+        ds.NEG_DICT.update({key: [temp_neg_dict_self.get(key)[0], 1]})
     for key in temp_neu_dict_self.keys():
-        ds.NEU_DICT.update({key: temp_neu_dict_self.get(key)[0]})
+        ds.NEU_DICT.update({key: [temp_neu_dict_self.get(key)[0], 1]})
     ds.VECTORS = ds.VECTORS_SELF
     ds.LABELS = ds.LABELS_SELF
 
