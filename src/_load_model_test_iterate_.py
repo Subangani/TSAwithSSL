@@ -169,9 +169,9 @@ def load_matrix_sub(process_dict, label=0.0, is_self_training=False):
 
 
 def get_vectors_and_labels():
-    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1, is_self_training=False)
-    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1, is_self_training=False)
-    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1, is_self_training=False)
+    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1)
+    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1)
+    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1)
     pos_vec, pos_lab = load_matrix_sub(process_dict=ds.POS_DICT, label=2.0, is_self_training=False)
     neg_vec, neg_lab = load_matrix_sub(process_dict=ds.NEG_DICT, label=-2.0, is_self_training=False)
     neu_vec, neu_lab = load_matrix_sub(process_dict=ds.NEU_DICT, label=0.0, is_self_training=False)
@@ -186,9 +186,9 @@ def get_vectors_and_labels_self():
     obtain the vectors and labels for total self training and storing it at main store
     :return:
     """
-    pos_t, pos_post_t = ngram.ngram(ds.POS_DICT_SELF, 1, is_self_training=True)
-    neg_t, neg_post_t = ngram.ngram(ds.NEG_DICT_SELF, 1, is_self_training=True)
-    neu_t, neu_post_t = ngram.ngram(ds.NEU_DICT_SELF, 1, is_self_training=True)
+    pos_t, pos_post_t = ngram.ngram(ds.POS_DICT_SELF, 1)
+    neg_t, neg_post_t = ngram.ngram(ds.NEG_DICT_SELF, 1)
+    neu_t, neu_post_t = ngram.ngram(ds.NEU_DICT_SELF, 1)
     ds.POS_UNI_GRAM_SELF, is_success = commons.dict_update(ds.POS_UNI_GRAM, pos_t)
     ds.NEG_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEG_UNI_GRAM, neg_t)
     ds.NEU_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEU_UNI_GRAM, neu_t)
