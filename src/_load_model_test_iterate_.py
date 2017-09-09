@@ -1,4 +1,5 @@
 import csv
+import operator
 import warnings
 
 import numpy as np
@@ -55,7 +56,7 @@ def load_initial_dictionaries(type):
             unlabel_count = 1
             for line in main:
                 if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
-                    pos_dict.update({str(pos_count): [str(line[2]),1]})
+                    pos_dict.update({str(pos_count): [str(line[2]), 1]})
                     pos_count += 1
                 elif line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
                     neg_dict.update({str(neg_count): [str(line[2]), 1]})
@@ -299,7 +300,7 @@ def predict_probability_compare(nl, na):
         else:
             return max_proba, True
     else:
-        return max_proba, True
+        return max_proba, False
 
 
 def store_test(is_self_training):
@@ -326,17 +327,6 @@ def get_result(test_dict):
     :param test_dict:
     :return:
     """
-    current_iteration = ds.CURRENT_ITERATION
-    ds.LEN_TEST = len(ds.TEST_DICT)
-    if current_iteration == 1:
-        ds.LEN_POS = len(ds.POS_DICT)
-        ds.LEN_NEG = len(ds.NEG_DICT)
-        ds.LEN_NEU = len(ds.NEU_DICT)
-    elif current_iteration > 1:
-        ds.LEN_POS += len(ds.POS_DICT_SELF)
-        ds.LEN_NEG += len(ds.NEG_DICT_SELF)
-        ds.LEN_NEU += len(ds.NEU_DICT_SELF)
-
     TP = TN = TNeu = FP_N = FP_Neu = FN_P = FN_Neu = FNeu_P = FNeu_N = 0
     if len(test_dict) > 0:
         dic = {'positive': 2.0, 'negative': -2.0, 'neutral': 0.0}
@@ -378,8 +368,7 @@ def get_result(test_dict):
     f_score_n = 2 * commons.get_divided_value((re_n * pre_n), (re_n + pre_n))
     f_score = round((f_score_p + f_score_n) / 2, 4)
 
-    return ds.LEN_POS, ds.LEN_NEG, ds.LEN_NEU, ds.LEN_TEST, globals.FEATURE_SET_CODE, current_iteration, \
-           accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
+    return accuracy, pre_p, pre_n, pre_neu, re_p, re_n, re_neu, \
            f_score_p, f_score_n, f_score
 
 
@@ -418,12 +407,20 @@ def load_iteration_dict(is_self_training):
                     neu_list.append(list)
                     neu_count += 1
 
-        pos_list_inter = sorted(pos_list, key=lambda x: x[2], reverse=True)
-        neg_list_inter = sorted(neg_list, key=lambda x: x[2], reverse=True)
-        neu_list_inter = sorted(neu_list, key=lambda x: x[2], reverse=True)
-        pos_list_final = sorted(pos_list_inter, key=lambda x: x[4], reverse=True)
-        neg_list_final = sorted(neg_list_inter, key=lambda x: x[4], reverse=True)
-        neu_list_final = sorted(neu_list_inter, key=lambda x: x[4], reverse=True)
+        # pos_list_inter = sorted(pos_list, key=lambda x: x[2], reverse=True)
+        # neg_list_inter = sorted(neg_list, key=lambda x: x[2], reverse=True)
+        # neu_list_inter = sorted(neu_list, key=lambda x: x[2], reverse=True)
+        # pos_list_final = sorted(pos_list_inter, key=lambda x: x[4], reverse=True)
+        # neg_list_final = sorted(neg_list_inter, key=lambda x: x[4], reverse=True)
+        # neu_list_final = sorted(neu_list_inter, key=lambda x: x[4], reverse=True)
+
+        # pos_list_final = sorted(pos_list, key=lambda x: (x[4],x[2]), reverse=True)
+        # neg_list_final = sorted(neg_list, key=lambda x: (x[4],x[2]), reverse=True)
+        # neu_list_final = sorted(neu_list, key=lambda x: (x[4],x[2]), reverse=True)
+
+        pos_list_final = sorted(pos_list, key=operator.itemgetter(4, 2), reverse=True)
+        neg_list_final = sorted(neg_list, key=operator.itemgetter(4, 2), reverse=True)
+        neu_list_final = sorted(neu_list, key=operator.itemgetter(4, 2), reverse=True)
 
         for i in range(0, int(globals.POS_RATIO * increment_limit), 1):
             temp_pos_dict[str(pos_list_final[i][3])] = [pos_list_final[i][0], pos_list_final[i][4]]
@@ -451,7 +448,12 @@ def initial_run():
     get_vectors_and_labels()
     generate_model(is_self_training=False)
     store_test(is_self_training=False)
-    return get_result(ds.TEST_DICT)
+    result = get_result(ds.TEST_DICT)
+    ds.BEST_F_SCORE = result[9]
+    size = get_size()
+    feature_set_code = globals.FEATURE_SET_CODE
+    combined_result = size + (feature_set_code, 0) + result
+    return combined_result
 
 
 def self_training_run(is_self_training):
@@ -459,7 +461,27 @@ def self_training_run(is_self_training):
     get_vectors_and_labels_self()
     generate_model(is_self_training=True)
     store_test(is_self_training=True)
-    return get_result(ds.TEST_DICT)
+    result = get_result(ds.TEST_DICT)
+    ds.CURRENT_F_SCORE = result[9]
+    if ds.BEST_F_SCORE <= ds.CURRENT_F_SCORE:
+        upgrade()
+        ds.BEST_F_SCORE = ds.CURRENT_F_SCORE
+    else:
+        downgrade()
+    size = get_size()
+    feature_set_code = globals.FEATURE_SET_CODE
+    current_iteration = ds.CURRENT_ITERATION
+    combined_result = size + (feature_set_code, current_iteration) + result
+    ds.CURRENT_ITERATION += 1
+    return combined_result
+
+
+def get_size():
+    pos_size = len(ds.POS_DICT)
+    neg_size = len(ds.NEG_DICT)
+    neu_size = len(ds.NEU_DICT)
+    test_size = len(ds.TEST_DICT)
+    return pos_size, neg_size, neu_size, test_size
 
 
 def upgrade():

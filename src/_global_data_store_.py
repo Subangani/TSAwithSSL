@@ -19,12 +19,6 @@ MODEL = None
 SCALAR = None
 NORMALIZER = None
 
-CURRENT_ITERATION = 1
-LEN_POS = 0
-LEN_NEG = 0
-LEN_NEU = 0
-LEN_TEST = 0
-
 # These are for temporary storing things for SELF TRAINING
 # 1. These are for storing LABEL train data in every iteration
 # no continuous accumulation will be happen at here.
@@ -56,3 +50,8 @@ NEU_UNI_GRAM_SELF = {}
 POS_POST_UNI_GRAM_SELF = {}
 NEG_POST_UNI_GRAM_SELF = {}
 NEU_POST_UNI_GRAM_SELF = {}
+
+# Iteration based variables
+CURRENT_ITERATION = 0
+BEST_F_SCORE = 0
+CURRENT_F_SCORE = 0
