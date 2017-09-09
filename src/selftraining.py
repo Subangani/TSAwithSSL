@@ -18,8 +18,7 @@ def self_training():
     csv_result.writerow(result)
 
     while lmti.ds.CURRENT_ITERATION <= globals.NO_OF_ITERATION:
-        lmti.ds.CURRENT_ITERATION += 1
-        if lmti.ds.CURRENT_ITERATION == 1:
+        if lmti.ds.CURRENT_ITERATION == 0:
             is_self_training = False
         else:
             is_self_training = True

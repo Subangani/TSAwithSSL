@@ -470,9 +470,9 @@ def self_training_run(is_self_training):
         downgrade()
     size = get_size()
     feature_set_code = globals.FEATURE_SET_CODE
+    ds.CURRENT_ITERATION += 1
     current_iteration = ds.CURRENT_ITERATION
     combined_result = size + (feature_set_code, current_iteration) + result
-    ds.CURRENT_ITERATION += 1
     return combined_result
 
 
