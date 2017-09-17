@@ -54,22 +54,25 @@ def load_initial_dictionaries(type):
             neg_count = 1
             neu_count = 1
             unlabel_count = 1
+            count = 1
             for line in main:
-                if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
-                    pos_dict.update({str(pos_count): [str(line[2]), 1]})
-                    pos_count += 1
-                elif line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
-                    neg_dict.update({str(neg_count): [str(line[2]), 1]})
-                    neg_count += 1
-                elif line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
-                    neu_dict.update({str(neu_count): [str(line[2]), 1]})
-                    neu_count += 1
-                else:
+                if count % 3 == 0:
+                    if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
+                        pos_dict.update({str(pos_count): [str(line[2]), 1]})
+                        pos_count += 1
+                    if line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
+                        neg_dict.update({str(neg_count): [str(line[2]), 1]})
+                        neg_count += 1
+                    if line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
+                        neu_dict.update({str(neu_count): [str(line[2]), 1]})
+                        neu_count += 1
+                if count % 3 == 1:
                     if not type:
                         break
                     else:
                         unlabel_dict.update({str(unlabel_count): [str(line[2]), 1]})
                         unlabel_count += 1
+                count = count + 1
         ds.POS_DICT = pos_dict
         ds.NEG_DICT = neg_dict
         ds.NEU_DICT = neu_dict
@@ -272,35 +275,22 @@ def generate_model(is_self_training=False):
     return
 
 
-def predict(tweet, is_self_training):
-    z = map_tweet(tweet, is_self_training)
-    z_scaled = ds.SCALAR.transform(z)
-    z = ds.NORMALIZER.transform([z_scaled])
-    z = z[0].tolist()
-    return ds.MODEL.predict([z]).tolist()[0]
-
-
 def predict_probability(tweet, is_self_training):
     z = map_tweet(tweet, is_self_training)
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
     z = z[0].tolist()
-    return ds.MODEL.predict_proba([z]).tolist()[0]
-
-
-def predict_probability_compare(nl, na):
+    na = ds.MODEL.predict_proba([z]).tolist()[0]
     max_proba = max(na)
-    if max > 0.5:
-        if na[0] == max_proba and nl == -2.0:
-            return max_proba, True
-        elif na[1] == max_proba and nl == 0.0:
-            return max_proba, True
-        elif na[2] == max_proba and nl == 2.0:
-            return max_proba, True
-        else:
-            return max_proba, True
+    if max > 1.0/3:
+        if na[0] == max_proba:
+            return -2.0, max_proba, True
+        if na[1] == max_proba:
+            return 2.0, max_proba, True
+        if na[2] == max_proba:
+            return 0.0, max_proba, True
     else:
-        return max_proba, False
+        return -8.0,max_proba, False
 
 
 def store_test(is_self_training):
@@ -313,7 +303,7 @@ def store_test(is_self_training):
             line = list(line)
             tweet = line[2]
             s = line[1]
-            nl = predict(tweet, is_self_training)
+            nl,max,is_success = predict_probability(tweet, is_self_training)
             test_dict.update({str(count): [s, tweet, nl]})
             count = count + 1
             if count >= limit:
@@ -392,9 +382,7 @@ def load_iteration_dict(is_self_training):
 
         for key in ds.UNLABELED_DICT.keys():
             tweet, weight = ds.UNLABELED_DICT.get(key)
-            nl = predict(tweet, is_self_training)
-            na = predict_probability(tweet, is_self_training)
-            max_proba, is_success = predict_probability_compare(nl, na)
+            nl,max_proba, is_success = predict_probability(tweet, is_self_training)
             if is_success:
                 list = [tweet, nl, max_proba, key, weight]
                 if nl == 2.0:
@@ -406,17 +394,6 @@ def load_iteration_dict(is_self_training):
                 if nl == 0.0:
                     neu_list.append(list)
                     neu_count += 1
-
-        # pos_list_inter = sorted(pos_list, key=lambda x: x[2], reverse=True)
-        # neg_list_inter = sorted(neg_list, key=lambda x: x[2], reverse=True)
-        # neu_list_inter = sorted(neu_list, key=lambda x: x[2], reverse=True)
-        # pos_list_final = sorted(pos_list_inter, key=lambda x: x[4], reverse=True)
-        # neg_list_final = sorted(neg_list_inter, key=lambda x: x[4], reverse=True)
-        # neu_list_final = sorted(neu_list_inter, key=lambda x: x[4], reverse=True)
-
-        # pos_list_final = sorted(pos_list, key=lambda x: (x[4],x[2]), reverse=True)
-        # neg_list_final = sorted(neg_list, key=lambda x: (x[4],x[2]), reverse=True)
-        # neu_list_final = sorted(neu_list, key=lambda x: (x[4],x[2]), reverse=True)
 
         pos_list_final = sorted(pos_list, key=operator.itemgetter(4, 2), reverse=True)
         neg_list_final = sorted(neg_list, key=operator.itemgetter(4, 2), reverse=True)
