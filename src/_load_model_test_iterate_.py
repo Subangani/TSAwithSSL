@@ -282,7 +282,7 @@ def predict_probability(tweet, is_self_training):
     z = z[0].tolist()
     na = ds.MODEL.predict_proba([z]).tolist()[0]
     max_proba = max(na)
-    if max > 1.0/3:
+    if max_proba > 1.0/3:
         if na[0] == max_proba:
             return -2.0, max_proba, True
         if na[1] == max_proba:
