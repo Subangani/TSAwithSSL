@@ -26,7 +26,7 @@ def get_file_prefix():
            str(globals.NO_OF_ITERATION) + "_" + str(globals.DEFAULT_CLASSIFIER) + "_"
 
 
-def load_initial_dictionaries(type):
+def load_initial_dictionaries():
     """
     This used to classify initial dataset as positive,negative and neutral
     :return: It return the success or failure
@@ -35,48 +35,34 @@ def load_initial_dictionaries(type):
     pos_dict = {}
     neg_dict = {}
     neu_dict = {}
-    unlabel_dict = {}
-    if not type:
-        with open('../dataset/unlabeled.csv', "r") as unlabeled_file:
-            reader = csv.reader(unlabeled_file)
-            count = 0
-            for line in reader:
-                count = count + 1
-                tweet = line[5]
-                if count < 10000:
-                    unlabel_dict.update({str(count): [tweet, 1]})
-                else:
-                    break
-    else:
-        with open("../dataset/semeval.csv", 'r') as main_dataset:
-            main = csv.reader(main_dataset)
-            pos_count = 1
-            neg_count = 1
-            neu_count = 1
-            unlabel_count = 1
-            count = 1
-            for line in main:
-                if count % 3 == 0:
-                    if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
-                        pos_dict.update({str(pos_count): [str(line[2]), 1]})
-                        pos_count += 1
-                    if line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
-                        neg_dict.update({str(neg_count): [str(line[2]), 1]})
-                        neg_count += 1
-                    if line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
-                        neu_dict.update({str(neu_count): [str(line[2]), 1]})
-                        neu_count += 1
-                if count % 3 == 1:
-                    if not type:
-                        break
-                    else:
-                        unlabel_dict.update({str(unlabel_count): [str(line[2]), 1]})
-                        unlabel_count += 1
-                count = count + 1
+    un_label_dict = {}
+    with open("../dataset/semeval.csv", 'r') as main_dataset:
+        main = csv.reader(main_dataset)
+        pos_count = 1
+        neg_count = 1
+        neu_count = 1
+        un_label_count = 1
+        count = 1
+        for line in main:
+            if count % 3 == 0:
+                if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
+                    pos_dict.update({str(pos_count): [str(line[2]), 1]})
+                    pos_count += 1
+                if line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
+                    neg_dict.update({str(neg_count): [str(line[2]), 1]})
+                    neg_count += 1
+                if line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
+                    neu_dict.update({str(neu_count): [str(line[2]), 1]})
+                    neu_count += 1
+            if count % 3 == 1:
+                un_label_dict.update({str(un_label_count): [str(line[2]), 1]})
+                un_label_count += 1
+            count = count + 1
+
         ds.POS_DICT = pos_dict
         ds.NEG_DICT = neg_dict
         ds.NEU_DICT = neu_dict
-        ds.UNLABELED_DICT = unlabel_dict
+        ds.UNLABELED_DICT = un_label_dict
     return
 
 
@@ -275,7 +261,7 @@ def generate_model(is_self_training=False):
     return
 
 
-def predict_probability(tweet, is_self_training):
+def predict(tweet, is_self_training):
     z = map_tweet(tweet, is_self_training)
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
@@ -290,7 +276,7 @@ def predict_probability(tweet, is_self_training):
         if na[2] == max_proba:
             return 0.0, max_proba, True
     else:
-        return -4.0,max_proba, False
+        return -4.0, max_proba, False
 
 
 def store_test(is_self_training):
@@ -303,7 +289,7 @@ def store_test(is_self_training):
             line = list(line)
             tweet = line[2]
             s = line[1]
-            nl, max, is_success = predict_probability(tweet, is_self_training)
+            nl, max_proba, is_success = predict(tweet, is_self_training)
             if is_success :
                 test_dict.update({str(count): [s, tweet, nl]})
             else :
@@ -385,17 +371,17 @@ def load_iteration_dict(is_self_training):
 
         for key in ds.UNLABELED_DICT.keys():
             tweet, weight = ds.UNLABELED_DICT.get(key)
-            nl,max_proba, is_success = predict_probability(tweet, is_self_training)
+            nl,max_proba, is_success = predict(tweet, is_self_training)
             if is_success:
-                list = [tweet, nl, max_proba, key, weight]
+                tweet_list = [tweet, nl, max_proba, key, weight]
                 if nl == 2.0:
-                    pos_list.append(list)
+                    pos_list.append(tweet_list)
                     pos_count += 1
                 if nl == -2.0:
-                    neg_list.append(list)
+                    neg_list.append(tweet_list)
                     neg_count += 1
                 if nl == 0.0:
-                    neu_list.append(list)
+                    neu_list.append(tweet_list)
                     neu_count += 1
 
         pos_list_final = sorted(pos_list, key=operator.itemgetter(4, 2), reverse=True)
@@ -424,7 +410,7 @@ def load_iteration_dict(is_self_training):
 
 
 def initial_run():
-    load_initial_dictionaries(1)
+    load_initial_dictionaries()
     get_vectors_and_labels()
     generate_model(is_self_training=False)
     store_test(is_self_training=False)
