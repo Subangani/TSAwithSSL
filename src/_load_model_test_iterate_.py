@@ -272,9 +272,9 @@ def predict(tweet, is_self_training):
         if na[0] == max_proba:
             return -2.0, max_proba, True
         if na[1] == max_proba:
-            return 2.0, max_proba, True
-        if na[2] == max_proba:
             return 0.0, max_proba, True
+        if na[2] == max_proba:
+            return 2.0, max_proba, True
     else:
         return -4.0, max_proba, False
 
