@@ -290,7 +290,7 @@ def predict_probability(tweet, is_self_training):
         if na[2] == max_proba:
             return 0.0, max_proba, True
     else:
-        return -8.0,max_proba, False
+        return -4.0,max_proba, False
 
 
 def store_test(is_self_training):
@@ -303,8 +303,11 @@ def store_test(is_self_training):
             line = list(line)
             tweet = line[2]
             s = line[1]
-            nl,max,is_success = predict_probability(tweet, is_self_training)
-            test_dict.update({str(count): [s, tweet, nl]})
+            nl, max, is_success = predict_probability(tweet, is_self_training)
+            if is_success :
+                test_dict.update({str(count): [s, tweet, nl]})
+            else :
+                print "Not success"
             count = count + 1
             if count >= limit:
                 break
