@@ -42,22 +42,27 @@ def load_initial_dictionaries():
         neg_count = 1
         neu_count = 1
         un_label_count = 1
-        count = 1
         for line in main:
-            if count % 3 == 0:
-                if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
-                    pos_dict.update({str(pos_count): [str(line[2]), 1]})
-                    pos_count += 1
-                if line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
-                    neg_dict.update({str(neg_count): [str(line[2]), 1]})
-                    neg_count += 1
-                if line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
-                    neu_dict.update({str(neu_count): [str(line[2]), 1]})
-                    neu_count += 1
-            if count % 3 == 1:
+            if line[1] == "positive" and pos_count <= globals.POS_COUNT_LIMIT:
+                pos_dict.update({str(pos_count): [str(line[2]), 1]})
+                pos_count += 1
+            elif line[1] == "positive" and pos_count > globals.POS_COUNT_LIMIT:
                 un_label_dict.update({str(un_label_count): [str(line[2]), 1]})
                 un_label_count += 1
-            count = count + 1
+
+            if line[1] == "negative" and neg_count <= globals.NEG_COUNT_LIMIT:
+                neg_dict.update({str(neg_count): [str(line[2]), 1]})
+                neg_count += 1
+            elif line[1] == "negative" and neg_count > globals.NEG_COUNT_LIMIT:
+                un_label_dict.update({str(un_label_count): [str(line[2]), 1]})
+                un_label_count += 1
+
+            if line[1] == "neutral" and neu_count <= globals.NEU_COUNT_LIMIT:
+                neu_dict.update({str(neu_count): [str(line[2]), 1]})
+                neu_count += 1
+            elif line[1] == "neutral" and neu_count > globals.NEU_COUNT_LIMIT:
+                un_label_dict.update({str(un_label_count): [str(line[2]), 1]})
+                un_label_count += 1
 
         ds.POS_DICT = pos_dict
         ds.NEG_DICT = neg_dict
