@@ -2,6 +2,7 @@ import csv
 import time
 
 import _config_globals_ as globals
+import _config_constants_ as cons
 import _generic_commons_ as commons
 import _load_model_test_iterate_ as lmti
 
@@ -9,7 +10,7 @@ import _load_model_test_iterate_ as lmti
 def self_training():
     final_file = open('../dataset/analysed/' + lmti.get_file_prefix() + str(time.time()) + 'result.csv', 'w+')
     csv_result = csv.writer(final_file)
-    csv_result.writerow(globals.CSV_HEADER)
+    csv_result.writerow(cons.CSV_HEADER)
 
     time_list = [time.time()]
 

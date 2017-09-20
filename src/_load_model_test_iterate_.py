@@ -3,7 +3,6 @@ import warnings
 
 import numpy as np
 from sklearn import preprocessing as pr, svm
-from xgboost import XGBClassifier
 
 import _config_constants_ as cons
 import _config_globals_ as globals
@@ -157,9 +156,9 @@ def load_matrix_sub(process_dict, label=0.0, is_self_training=False):
 
 
 def get_vectors_and_labels():
-    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.ngram(file_dict=ds.POS_DICT, gram=1)
-    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEG_DICT, gram=1)
-    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.ngram(file_dict=ds.NEU_DICT, gram=1)
+    ds.POS_UNI_GRAM, ds.POS_POST_UNI_GRAM = ngram.generate_n_gram_dict(file_dict=ds.POS_DICT, gram=1)
+    ds.NEG_UNI_GRAM, ds.NEG_POST_UNI_GRAM = ngram.generate_n_gram_dict(file_dict=ds.NEG_DICT, gram=1)
+    ds.NEU_UNI_GRAM, ds.NEU_POST_UNI_GRAM = ngram.generate_n_gram_dict(file_dict=ds.NEU_DICT, gram=1)
     pos_vec, pos_lab = load_matrix_sub(process_dict=ds.POS_DICT, label=2.0, is_self_training=False)
     neg_vec, neg_lab = load_matrix_sub(process_dict=ds.NEG_DICT, label=-2.0, is_self_training=False)
     neu_vec, neu_lab = load_matrix_sub(process_dict=ds.NEU_DICT, label=0.0, is_self_training=False)
@@ -174,9 +173,9 @@ def get_vectors_and_labels_self():
     obtain the vectors and labels for total self training and storing it at main store
     :return:
     """
-    pos_t, pos_post_t = ngram.ngram(ds.POS_DICT_SELF, 1)
-    neg_t, neg_post_t = ngram.ngram(ds.NEG_DICT_SELF, 1)
-    neu_t, neu_post_t = ngram.ngram(ds.NEU_DICT_SELF, 1)
+    pos_t, pos_post_t = ngram.generate_n_gram_dict(ds.POS_DICT_SELF, 1)
+    neg_t, neg_post_t = ngram.generate_n_gram_dict(ds.NEG_DICT_SELF, 1)
+    neu_t, neu_post_t = ngram.generate_n_gram_dict(ds.NEU_DICT_SELF, 1)
     ds.POS_UNI_GRAM_SELF, is_success = commons.dict_update(ds.POS_UNI_GRAM, pos_t)
     ds.NEG_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEG_UNI_GRAM, neg_t)
     ds.NEU_UNI_GRAM_SELF, is_success = commons.dict_update(ds.NEU_UNI_GRAM, neu_t)
@@ -198,9 +197,9 @@ def get_vectors_and_labels_self():
     temp_pos_dict_final.update(temp_pos_dict_self)
     temp_neg_dict_final.update(temp_neg_dict_self)
     temp_neu_dict_final.update(temp_neu_dict_self)
-    pos_vec, pos_lab = load_matrix_sub(temp_pos_dict_final, 2.0, True)
-    neg_vec, neg_lab = load_matrix_sub(temp_neg_dict_final, -2.0, True)
-    neu_vec, neu_lab = load_matrix_sub(temp_neu_dict_final, 0.0, True)
+    pos_vec, pos_lab = load_matrix_sub(temp_pos_dict_final, cons.LABEL_POSITIVE, True)
+    neg_vec, neg_lab = load_matrix_sub(temp_neg_dict_final, cons.LABEL_NEGATIVE, True)
+    neu_vec, neu_lab = load_matrix_sub(temp_neu_dict_final, cons.LABEL_NEUTRAL, True)
     ds.VECTORS_SELF = pos_vec + neg_vec + neu_vec
     ds.LABELS_SELF = pos_lab + neg_lab + neu_lab
     return is_success
@@ -209,9 +208,9 @@ def get_vectors_and_labels_self():
 def get_modified_class_weight(sizes):
     pos, neg, neu, test = sizes
     weights = dict()
-    weights[-2.0] = (1.0 * neu)/neg
-    weights[2.0] = (1.0 * neu)/pos
-    weights[0.0] = 1.0
+    weights[cons.LABEL_POSITIVE] = (1.0 * neu)/neg
+    weights[cons.LABEL_NEGATIVE] = (1.0 * neu)/pos
+    weights[cons.LABEL_NEUTRAL] = 1.0
     return weights
 
 
@@ -245,24 +244,6 @@ def generate_model(is_self_training=False):
         model = svm.SVC(kernel=kernel_function, C=c_parameter,
                         class_weight=class_weights, gamma=gamma, probability=True)
         model.fit(vectors, labels)
-    elif classifier_type == cons.CLASSIFIER_XGBOOST:
-        learning_rate = globals.DEFAULT_LEARNING_RATE
-        max_depth = globals.DEFAULT_MAX_DEPTH
-        min_child_weight = globals.DEFAULT_MIN_CHILD_WEIGHT
-        silent = globals.DEFAULT_SILENT
-        objective = globals.DEFAULT_OBJECTIVE
-        subsample = globals.DEFAULT_SUB_SAMPLE
-        gamma = globals.DEFAULT_GAMMA_XBOOST
-        reg_alpha = globals.DEFAULT_REGRESSION_ALPHA
-        n_estimators = globals.DEFAULT_N_ESTIMATORS
-        colsample_bytree = globals.DEFAULT_COLSAMPLE_BYTREE
-        model = XGBClassifier(learning_rate=learning_rate, max_depth=max_depth,
-                              min_child_weight=min_child_weight, silent=silent,
-                              objective=objective, subsample=subsample, gamma=gamma,
-                              reg_alpha=reg_alpha, n_estimators=n_estimators,
-                              colsample_bytree=colsample_bytree, )
-        vectors_a = np.asarray(vectors)
-        model.fit(vectors_a, labels)
     else:
         model = None
     ds.SCALAR = scaler
@@ -276,7 +257,7 @@ def predict(tweet, is_self_training):
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
     z = z[0].tolist()
-    # na = ds.MODEL.predict_proba([z]).tolist()[0]
+    na = ds.MODEL.predict([z]).tolist()[0]
     # max_probability = max(na)
     # if max_probability > 1.0 / 3:
     #     if na[0] == max_probability:
@@ -287,8 +268,8 @@ def predict(tweet, is_self_training):
     #         return 2.0, True
     # else:
     #     return -4.0, False
-    na = ds.MODEL.predict([z]).tolist()[0]
     return na,True
+
 
 def store_test(is_self_training):
     test_dict = {}

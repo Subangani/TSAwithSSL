@@ -39,12 +39,6 @@ def capital_count_in_a_word(tweet):
 
 
 def surround_by_signs(tweet):
-    """
-    This is used to find the surrounding signs
-    [based on AVAYA paper I have added this just to check whether there is improvement or not]
-    :param tweet:
-    :return:
-    """
     highlight = ['"', "'", "*"]
     count = 0
     if len(tweet) != 0:

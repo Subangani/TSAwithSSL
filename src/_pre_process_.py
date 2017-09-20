@@ -1,6 +1,5 @@
 import re
 
-
 def load_stop_word_list():
     fp = open("../resource/stopWords.txt", 'r')
     stop_words = ['at_user', 'url']

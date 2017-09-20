@@ -2,14 +2,14 @@ import _feature_postag_ as postag
 import _generic_commons_ as commons
 
 
-def dict(words, gram):
+def create_dict(words, gram):
     """
-    This is to obtain the dict of word of particular line
+    This is to obtain the create_dict of word of particular line
     :param words: 
     :param gram: 
-    :return: give a dict of word(s) with proper format based ngram values such as 1,2,3
+    :return: give a create_dict of word(s) with proper format based generate_n_gram_dict values such as 1,2,3
     """
-    tempdict = {}
+    temp_dict = {}
     for i in range(len(words) - gram):
         if not words[i:i + gram] is "":
             temp = ""
@@ -19,15 +19,15 @@ def dict(words, gram):
                 temp = words[i] + " " + words[i + 1]
             elif gram == 3:
                 temp = words[i] + " " + words[i + 1] + " " + words[i + 2]
-            local_temp_value = tempdict.get(temp)
+            local_temp_value = temp_dict.get(temp)
             if local_temp_value is None:
-                tempdict.update({temp: 1})
+                temp_dict.update({temp: 1})
             else:
-                tempdict.update({temp: local_temp_value + 1})
-    return tempdict
+                temp_dict.update({temp: local_temp_value + 1})
+    return temp_dict
 
 
-def ngram(file_dict, gram):
+def generate_n_gram_dict(file_dict, gram):
     """
     this will return n-gram set for uni-gram,bi-gram and tri-gram, with frequency calculated
     for normal text and POS-tagged.
@@ -42,12 +42,12 @@ def ngram(file_dict, gram):
         try:
             line = file_dict.get(line_key)
             words = line.split()
-            word_dict = dict(words, gram)
+            word_dict = create_dict(words, gram)
             word_freq_dict, is_success = commons.dict_update(word_freq_dict, word_dict)
             temp_postags = postag.pos_tag_string(line).split()
             if temp_postags != "":
                 postags = temp_postags
-                postag_dict = dict(postags, gram)
+                postag_dict = create_dict(postags, gram)
                 postag_freq_dict, is_success = commons.dict_update(postag_freq_dict, postag_dict)
         except IndexError:
             print "Error"
@@ -69,7 +69,7 @@ def score(tweet, p, n, ne, ngram):
     neu = 0
     dictof_grams = {}
     tweet_list = tweet.split()
-    dictof_grams.update(dict(tweet_list, ngram))
+    dictof_grams.update(create_dict(tweet_list, ngram))
     for element in dictof_grams.keys():
         posCount = float(get_count(element, p))
         negCount = float(get_count(element, n))
@@ -87,7 +87,7 @@ def get_count(gram, pol):
     This will count the positive,negative, and neutral count based on relevant dictionary present
     :param gram: 
     :param pol: 
-    :return: return the availability of particular ngram
+    :return: return the availability of particular generate_n_gram_dict
     """
     count = 0.0
     try:
