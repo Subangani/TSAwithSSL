@@ -276,18 +276,19 @@ def predict(tweet, is_self_training):
     z_scaled = ds.SCALAR.transform(z)
     z = ds.NORMALIZER.transform([z_scaled])
     z = z[0].tolist()
-    na = ds.MODEL.predict_proba([z]).tolist()[0]
-    max_probability = max(na)
-    if max_probability > 1.0 / 3:
-        if na[0] == max_probability:
-            return -2.0, True
-        if na[1] == max_probability:
-            return 0.0, True
-        if na[2] == max_probability:
-            return 2.0, True
-    else:
-        return -4.0, False
-
+    # na = ds.MODEL.predict_proba([z]).tolist()[0]
+    # max_probability = max(na)
+    # if max_probability > 1.0 / 3:
+    #     if na[0] == max_probability:
+    #         return -2.0, True
+    #     if na[1] == max_probability:
+    #         return 0.0, True
+    #     if na[2] == max_probability:
+    #         return 2.0, True
+    # else:
+    #     return -4.0, False
+    na = ds.MODEL.predict([z]).tolist()[0]
+    return na,True
 
 def store_test(is_self_training):
     test_dict = {}
